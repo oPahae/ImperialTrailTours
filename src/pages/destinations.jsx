@@ -85,7 +85,7 @@ export default function DestinationPage() {
             const matchesBudget =
                 tour.price >= filters.budgetRange[0] && tour.price <= filters.budgetRange[1];
             const matchesType = !filters.type || tour.type === filters.type;
-            return matchesSearch && matchesDate && matchesDays && matchesBudget && matchesType;
+            return new Date(tour.dateMax) >= new Date() && matchesSearch && matchesDate && matchesDays && matchesBudget && matchesType;
         });
         result.sort((a, b) => {
             switch (sortBy) {

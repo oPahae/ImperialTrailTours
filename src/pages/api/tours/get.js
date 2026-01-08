@@ -35,6 +35,7 @@ export default async function handler(req, res) {
         GROUP_CONCAT(DISTINCT h.titre SEPARATOR ', ') AS highlights,
         MIN(d.prix) AS price,
         MIN(d.dateDeb) AS date,
+        MAX(d.dateDeb) AS dateMax,
         AVG(rt.netoiles) AS rating,
         COUNT(rt.id) AS reviews
       FROM Tours t
@@ -126,6 +127,7 @@ export default async function handler(req, res) {
       days: tour.days,
       price: tour.price || 0,
       date: tour.date ? tour.date.toISOString().split('T')[0] : null,
+      dateMax: tour.dateMax ? tour.dateMax.toISOString().split('T')[0] : null,
       image: tour.image
         ? `data:image/jpeg;base64,${tour.image.toString('base64')}`
         : 'https://via.placeholder.com/800x600?text=No+Image',
@@ -133,6 +135,8 @@ export default async function handler(req, res) {
       rating: tour.rating || 0,
       reviews: tour.reviews || 0,
     }));
+
+    formattedTours.map(f => console.log(f.title + " | " + f.dateMax + " | " + f.date))
 
     res.status(200).json({
       tours: formattedTours,
