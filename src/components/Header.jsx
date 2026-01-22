@@ -86,7 +86,11 @@ const Header = ({ session, entreprise }) => {
       {mobileMenuOpen && (
         <div className="lg:hidden fixed w-full top-16 shadow-2xl bg-white/98 backdrop-blur-md border-t border-gray-200">
           <div className="px-6 py-4 space-y-2">
-            {navItems.filter(nav => nav.admin === router.pathname.includes("admin")).map((item, index) => (
+            {navItems.filter(nav => (
+              nav.admin === router.pathname.includes("admin")
+              &&
+              (nav.titre !== "Me" || (session && nav.titre === "Me"))
+            )).map((item, index) => (
               <a
                 key={index}
                 href={`${item.href}`}
