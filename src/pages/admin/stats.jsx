@@ -59,17 +59,33 @@ export default function AdminStatsPage() {
     const tourTypeDistribution = {
         series: stats?.tourTypeDistribution,
         options: {
-            chart: { type: 'pie' },
+            chart: {
+                type: 'pie',
+            },
             labels: stats?.tourTypeLabels,
             colors: ['#F59E0B', '#10B981', '#3B82F6', '#8B5CF6'],
-            responsive: [{
-                breakpoint: 480,
-                options: {
-                    chart: { width: 200 },
-                    legend: { position: 'bottom' }
-                }
-            }]
-        }
+            legend: {
+                position: 'bottom', // 👈 IMPORTANT
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: (val) => `${val.toFixed(1)}%`,
+            },
+            responsive: [
+                {
+                    breakpoint: 768,
+                    options: {
+                        chart: {
+                            height: 260, // 👈 taille mobile
+                        },
+                        legend: {
+                            position: 'bottom',
+                            fontSize: '12px',
+                        },
+                    },
+                },
+            ],
+        },
     };
 
     const revenueByMonth = {
@@ -100,16 +116,38 @@ export default function AdminStatsPage() {
     const customerDemographics = {
         series: stats?.customerDemographics,
         options: {
-            chart: { type: 'donut' },
+            chart: {
+                type: 'donut',
+            },
             labels: stats?.demographicLabels,
             colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
-            responsive: [{
-                breakpoint: 480,
-                options: {
-                    chart: { width: 200 }
-                }
-            }]
-        }
+            legend: {
+                position: 'bottom',
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '65%', // 👈 réduit sur mobile
+                        labels: {
+                            show: false, // 👈 évite le chevauchement
+                        },
+                    },
+                },
+            },
+            dataLabels: {
+                enabled: false, // 👈 clé pour mobile
+            },
+            responsive: [
+                {
+                    breakpoint: 768,
+                    options: {
+                        chart: {
+                            height: 260,
+                        },
+                    },
+                },
+            ],
+        },
     };
 
     const popularDestinations = {
@@ -272,7 +310,7 @@ export default function AdminStatsPage() {
                                         options={tourTypeDistribution.options}
                                         series={tourTypeDistribution.series}
                                         type="pie"
-                                        height={350}
+                                        height={window.innerWidth < 768 ? 260 : 350}
                                     />
                                 </div>
                                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
