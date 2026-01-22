@@ -154,7 +154,7 @@ export default function DestinationPage() {
                             />
                             {searchTerm && <X onClick={() => setSearchTerm('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 rounded-full cursor-pointer font-bold text-amber-400 bg-amber-600/20 hover:text-white hover:bg-amber-600 duration-150 p-1 w-6 h-6" />}
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 flex-col md:flex-row">
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
                                 className="px-6 py-3 bg-white border-2 border-gray-200 rounded-lg hover:border-amber-500 transition flex items-center gap-2 font-medium"
