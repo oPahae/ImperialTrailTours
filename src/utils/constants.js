@@ -2,7 +2,7 @@ import { Facebook, Instagram, Linkedin, Youtube } from 'lucide-react';
 
 export const NO_BANNER_ROUTES = [
     "/tour", "/admin/tours", "/reserver", "/admin/ajouterTour", "/admin/modifierTour", "/admin/reservations",
-    "/admin/blog", "/admin/ajouterBlog", "/admin/modifierBlog", "/me"
+    "/admin/blog", "/admin/ajouterBlog", "/admin/modifierBlog", "/me", "/about", "/privacy"
 ];
 
 export const navItems = [
@@ -196,7 +196,7 @@ export const socialLinks = [
 export const footerInfos = {
     entreprise: "Imperial Trail Tours",
     tel: "+2120000000",
-    email: "contact.xpmaroc@gmail.com",
+    email: "contact@imperialtrailtours.com",
     location: "Casablanca, Maroc",
     domaine: "https://www.imperialtrailtours.com"
 }

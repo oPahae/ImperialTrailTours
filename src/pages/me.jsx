@@ -6,6 +6,8 @@ import { verifyAuth } from "@/middlewares/auth";
 
 export default function Me({ session }) {
   const [reservations, setReservations] = useState([]);
+  const [localReservation, setLocalReservation] = useState({});
+  const [showLocalReservation, setShowLocalReservation] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const cardRefs = useRef([]);
@@ -25,7 +27,6 @@ export default function Me({ session }) {
       try {
         const response = await fetch(`/api/reservations/getMe?id=${session ? session.id : null}`);
         const data = await response.json();
-        console.log(data)
         if (!response.ok) {
           throw new Error(data.message || "Impossible de récupérer vos réservations.");
         }
@@ -36,7 +37,27 @@ export default function Me({ session }) {
         setLoading(false);
       }
     };
+
+    const fetchLocalReservations = async (id) => {
+      try {
+        const response = await fetch(`/api/reservations/getID?id=${id}`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Impossible de récupérer vos réservations.");
+        }
+        setLocalReservation(data.reservations[0]);
+        setShowLocalReservation(true);
+        console.log(data.reservations[0])
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchReservations();
+    const stored = localStorage.getItem('localReservationId');
+    if(stored) fetchLocalReservations(stored);
   }, []);
 
   const formatDate = (dateString) => {
@@ -114,79 +135,145 @@ export default function Me({ session }) {
                   </div>
                 </div>
               </div>
-            ) : reservations.length === 0 ? (
-              <div className="text-center py-12">
-                <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">You have no bookings yet</h3>
-                <div className="mt-6">
-                  <Link
-                    href="destinations"
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
-                  >
-                    Discover
-                  </Link>
-                </div>
-              </div>
             ) : (
               <div className="space-y-6">
-                {reservations.map((reservation, index) => (
-                  <div
-                    key={reservation.id}
-                    ref={(el) => (cardRefs.current[index] = el)}
-                    className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-                  >
-                    <div className="p-6">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900">{reservation.titre}</h3>
-                          <p className="mt-1 text-sm text-gray-500">{reservation.descr}</p>
+                <span className="font-bold text-amber-400">My reservations</span>
+                <hr />
+                {reservations.length === 0 ?
+                  <div className="text-center py-12">
+                    <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">You have no bookings yet</h3>
+                    <div className="mt-6">
+                      <Link
+                        href="destinations"
+                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
+                      >
+                        Discover
+                      </Link>
+                    </div>
+                  </div>
+                  :
+                  reservations.map((reservation, index) => (
+                    <div
+                      key={reservation.id}
+                      ref={(el) => (cardRefs.current[index] = el)}
+                      className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                    >
+                      <div className="p-6">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900">{reservation.titre}</h3>
+                            <p className="mt-1 text-sm text-gray-500">{reservation.descr}</p>
+                          </div>
+                          <div className={`flex items-center ${getStatusInfo(reservation.status).color}`}>
+                            {getStatusInfo(reservation.status).icon}
+                            <span className="ml-1 text-sm font-medium">{getStatusInfo(reservation.status).text}</span>
+                          </div>
                         </div>
-                        <div className={`flex items-center ${getStatusInfo(reservation.status).color}`}>
-                          {getStatusInfo(reservation.status).icon}
-                          <span className="ml-1 text-sm font-medium">{getStatusInfo(reservation.status).text}</span>
-                        </div>
-                      </div>
 
-                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Calendar className="mr-2 h-4 w-4 text-amber-500" />
-                          <span>
-                            Du {formatDate(reservation.dateDeb)} au {formatDate(reservation.dateFin)}
-                          </span>
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Calendar className="mr-2 h-4 w-4 text-amber-500" />
+                            <span>
+                              Du {formatDate(reservation.dateDeb)} au {formatDate(reservation.dateFin)}
+                            </span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <MapPin className="mr-2 h-4 w-4 text-amber-500" />
+                            <span>{reservation.places}</span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Users className="mr-2 h-4 w-4 text-amber-500" />
+                            <span>{reservation.voyageurs.length} voyageur(s)</span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <DollarSign className="mr-2 h-4 w-4 text-amber-500" />
+                            <span>{reservation.prix} $</span>
+                          </div>
                         </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <MapPin className="mr-2 h-4 w-4 text-amber-500" />
-                          <span>{reservation.places}</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Users className="mr-2 h-4 w-4 text-amber-500" />
-                          <span>{reservation.voyageurs.length} voyageur(s)</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <DollarSign className="mr-2 h-4 w-4 text-amber-500" />
-                          <span>{reservation.prix} $</span>
-                        </div>
-                      </div>
 
-                      <div className="mt-6 pt-4 border-t border-gray-200">
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">Voyageurs</h4>
-                        <div className="space-y-3">
-                          {reservation.voyageurs.map((voyageur) => (
-                            <div key={voyageur.id} className="flex items-center text-sm">
-                              <div className="flex-shrink-0 h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
-                                <Users className="h-4 w-4 text-amber-600" />
+                        <div className="mt-6 pt-4 border-t border-gray-200">
+                          <h4 className="text-sm font-medium text-gray-900 mb-2">Voyageurs</h4>
+                          <div className="space-y-3">
+                            {reservation.voyageurs.map((voyageur) => (
+                              <div key={voyageur.id} className="flex items-center text-sm">
+                                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
+                                  <Users className="h-4 w-4 text-amber-600" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">{voyageur.nom} {voyageur.prenom}</p>
+                                  <p className="text-gray-500">{voyageur.email}</p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="font-medium text-gray-900">{voyageur.nom} {voyageur.prenom}</p>
-                                <p className="text-gray-500">{voyageur.email}</p>
-                              </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                }
+
+                {showLocalReservation &&
+                  <>
+                    <span className="font-bold text-amber-400">My reservations without account</span>
+                    <hr />
+                    <div
+                      key={localReservation.id}
+                      className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                    >
+                      <div className="p-6">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900">{localReservation.titre}</h3>
+                            <p className="mt-1 text-sm text-gray-500">{localReservation.descr}</p>
+                          </div>
+                          <div className={`flex items-center ${getStatusInfo(localReservation.status).color}`}>
+                            {getStatusInfo(localReservation.status).icon}
+                            <span className="ml-1 text-sm font-medium">{getStatusInfo(localReservation.status).text}</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Calendar className="mr-2 h-4 w-4 text-amber-500" />
+                            <span>
+                              From {formatDate(localReservation.dateDeb)} to {formatDate(localReservation.dateFin)}
+                            </span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <MapPin className="mr-2 h-4 w-4 text-amber-500" />
+                            <span>{localReservation.places}</span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Users className="mr-2 h-4 w-4 text-amber-500" />
+                            <span>{localReservation.voyageurs.length} traveler(s)</span>
+                          </div>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <DollarSign className="mr-2 h-4 w-4 text-amber-500" />
+                            <span>{localReservation.prix} $</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-6 pt-4 border-t border-gray-200">
+                          <h4 className="text-sm font-medium text-gray-900 mb-2">Travelers</h4>
+                          <div className="space-y-3">
+                            {localReservation.voyageurs.map((voyageur) => (
+                              <div key={voyageur.id} className="flex items-center text-sm">
+                                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
+                                  <Users className="h-4 w-4 text-amber-600" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900">{voyageur.nom} {voyageur.prenom}</p>
+                                  <p className="text-gray-500">{voyageur.email}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                }
               </div>
             )}
           </div>

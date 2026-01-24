@@ -326,7 +326,7 @@ const TourPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {tourData.availableDates.map((date, idx) => (
+                {tourData.availableDates.filter(d => new Date(d.startDate) > new Date()).map((date, idx) => (
                   <tr key={idx} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 border border-gray-200 text-gray-700">{date.startDate}</td>
                     <td className="px-6 py-4 border border-gray-200 text-gray-700">{date.endDate}</td>

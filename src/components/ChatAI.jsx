@@ -6,7 +6,7 @@ const AIChat = ({ isOpen, setIsOpen }) => {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Hello! I\'m your XPMaroc travel assistant. How can I help you discover Morocco today?'
+      content: 'Hello! I\'m your ImperialTrailTours travel assistant. How can I help you discover Morocco today?'
     }
   ]);
 
@@ -73,7 +73,7 @@ const AIChat = ({ isOpen, setIsOpen }) => {
     if (!siteData) {
       return "I'm still loading our travel information. Please try again in a moment.";
     }
-    const contextPrompt = `You are a professional travel assistant for XPMaroc, a Morocco travel agency based in Casablanca.
+    const contextPrompt = `You are a professional travel assistant for ImperialTrailTours, a Morocco travel agency based in Casablanca.
     Company Information:
     - Name: ${siteData.company.name}
     - Location: ${siteData.company.location}
@@ -145,7 +145,7 @@ const AIChat = ({ isOpen, setIsOpen }) => {
                 <MessageCircle className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="text-white font-semibold text-lg">XPMaroc Assistant</h3>
+                <h3 className="text-white font-semibold text-lg">ImperialTrailTours Assistant</h3>
                 <p className="text-white/80 text-xs">Your Morocco Travel Guide</p>
               </div>
             </div>

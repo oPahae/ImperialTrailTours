@@ -9,6 +9,7 @@ export default function Reserver({ session }) {
   const { id, date } = router.query;
   const [step, setStep] = useState(1);
   const [tourDate, setTourDate] = useState('');
+  const [msg, setMsg] = useState('');
   const [numTravelers, setNumTravelers] = useState(1);
   const [ask, setAsk] = useState(false);
   const [travelers, setTravelers] = useState([{
@@ -128,9 +129,12 @@ export default function Reserver({ session }) {
 
       if (response.ok) {
         const result = await response.json();
+        localStorage.setItem('localReservationId', result.reservationId);
         sendMail();
-        alert('Booking confirmed! You will receive a confirmation email shortly.');
-        setAsk(true);
+        setMsg('Booking confirmed! You will receive a confirmation email shortly.');
+        setTimeout(() => {
+          setAsk(true);
+        }, 1000);
       } else {
         console.error("Erreur lors de la confirmation de la réservation");
       }
@@ -310,7 +314,7 @@ export default function Reserver({ session }) {
                         required
                         value={traveler.prefix}
                         onChange={(e) => updateTraveler(index, 'prefix', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.prefix ? "border-green-500" : "border-red-500"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       >
                         <option value="">Select</option>
                         {prefixes.map(p => <option key={p} value={p}>{p}</option>)}
@@ -323,7 +327,7 @@ export default function Reserver({ session }) {
                         type="text"
                         value={traveler.firstName}
                         onChange={(e) => updateTraveler(index, 'firstName', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.firstName ? "border-green-500" : "border-red-500"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div>
@@ -333,7 +337,7 @@ export default function Reserver({ session }) {
                         type="text"
                         value={traveler.lastName}
                         onChange={(e) => updateTraveler(index, 'lastName', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.lastName ? "border-green-500" : "border-red-500"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div>
@@ -343,7 +347,7 @@ export default function Reserver({ session }) {
                         type="date"
                         value={traveler.birthDate}
                         onChange={(e) => updateTraveler(index, 'birthDate', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.birthDate ? "border-green-500" : "border-red-500"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div>
@@ -355,7 +359,7 @@ export default function Reserver({ session }) {
                         type="tel"
                         value={traveler.phone}
                         onChange={(e) => updateTraveler(index, 'phone', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.prefix ? "border-gray-500" : "border-gray-200"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div>
@@ -368,7 +372,7 @@ export default function Reserver({ session }) {
                         type="email"
                         value={traveler.email}
                         onChange={(e) => updateTraveler(index, 'email', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.email ? "border-green-500" : "border-red-500"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div>
@@ -381,7 +385,7 @@ export default function Reserver({ session }) {
                         type="text"
                         value={traveler.nationality}
                         onChange={(e) => updateTraveler(index, 'nationality', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.nationality ? "border-green-500" : "border-red-500"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div>
@@ -393,7 +397,7 @@ export default function Reserver({ session }) {
                         type="text"
                         value={traveler.passport}
                         onChange={(e) => updateTraveler(index, 'passport', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.passport ? "border-gray-500" : "border-gray-200"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div>
@@ -402,7 +406,7 @@ export default function Reserver({ session }) {
                         type="date"
                         value={traveler.passportExpiry}
                         onChange={(e) => updateTraveler(index, 'passportExpiry', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.passportExpiry ? "border-gray-500" : "border-gray-200"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div>
@@ -415,7 +419,7 @@ export default function Reserver({ session }) {
                         type="text"
                         value={traveler.country}
                         onChange={(e) => updateTraveler(index, 'country', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.country ? "border-green-500" : "border-red-500"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div>
@@ -425,17 +429,17 @@ export default function Reserver({ session }) {
                         type="text"
                         value={traveler.city}
                         onChange={(e) => updateTraveler(index, 'city', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.city ? "border-green-500" : "border-red-500"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Province/State <span className='text-red-500'>*</span></label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Province/State</label>
                       <input
                         required
                         type="text"
                         value={traveler.province}
                         onChange={(e) => updateTraveler(index, 'province', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.province ? "border-gray-500" : "border-gray-200"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -445,7 +449,7 @@ export default function Reserver({ session }) {
                         type="text"
                         value={traveler.address}
                         onChange={(e) => updateTraveler(index, 'address', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.address ? "border-green-500" : "border-red-500"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div>
@@ -455,7 +459,7 @@ export default function Reserver({ session }) {
                         type="text"
                         value={traveler.postalCode}
                         onChange={(e) => updateTraveler(index, 'postalCode', e.target.value)}
-                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none transition-colors"
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.postalCode ? "border-green-500" : "border-red-500"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                   </div>
@@ -617,6 +621,12 @@ export default function Reserver({ session }) {
                   </ul>
                 </div>
               </div>
+              {/* Success msg */}
+              {msg &&
+                <div className='w-full flex justify-center items-center mb-5'>
+                  <span className='font-bold text-green-400'>{msg}</span>
+                </div>
+              }
               {/* Confirmation button */}
               <div className="px-8 pb-8">
                 <button

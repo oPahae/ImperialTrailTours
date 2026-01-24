@@ -1,3 +1,4 @@
+import { footerInfos } from '@/utils/constants';
 import { motion, useAnimation } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 
@@ -68,7 +69,7 @@ export default function TravelPhilosophy() {
             </h2>
             <div className="space-y-6 text-gray-700 leading-relaxed">
               <p className="text-lg">
-                <span className="font-semibold text-amber-800">Experience Morocco</span> is in the business of changing perspectives.
+                <span className="font-semibold text-amber-800">{footerInfos.entreprise}</span> is in the business of changing perspectives.
                 We create experiences that open minds and invite guests to build a lasting connection with our home. In this way travel can be
                 more than tourism, it can be a unifying experience that makes the global feel a bit more local.
               </p>

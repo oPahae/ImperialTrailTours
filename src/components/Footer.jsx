@@ -285,7 +285,7 @@ const Footer = ({ session, isAdmin }) => {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-sm text-green-600 font-medium"
               >
-                Thank you for subscribing! 🎉
+                Thank you for subscribing!
               </motion.p>
             )}
           </motion.div>
@@ -308,13 +308,13 @@ const Footer = ({ session, isAdmin }) => {
             © {new Date().getFullYear()} <span className="font-semibold text-[#C0392B]">{footerInfos.entreprise}</span>. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <Link href="privacy" className="hover:text-[#C0392B] transition-colors duration-300">
+            <a href="privacy.html" className="hover:text-[#C0392B] transition-colors duration-300">
               Privacy Policy
-            </Link>
-            <span className="text-[#D4AF37]">•</span>
+            </a>
+            {/* <span className="text-[#D4AF37]">•</span>
             <Link href="terms" className="hover:text-[#C0392B] transition-colors duration-300">
               Terms of Service
-            </Link>
+            </Link> */}
           </div>
         </motion.div>
       </motion.div>

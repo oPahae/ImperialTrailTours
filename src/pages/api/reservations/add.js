@@ -47,8 +47,8 @@ export default async function handler(req, res) {
     }
 
     await pool.query(
-      'UPDATE Dates SET ndispo = ndispo - ? WHERE id = ?',
-      [travelers.length, dateId]
+      'UPDATE Dates SET ndispo = ndispo - ? WHERE id = ? AND ndispo >= ?',
+      [travelers.length, dateId, travelers.length]
     );
 
     await pool.query('COMMIT');

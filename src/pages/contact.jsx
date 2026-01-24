@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Send, User, MessageSquare, CheckCircle } from 'lucide-react';
+import { Mail, Send, User, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
 import { verifyAuth } from "@/middlewares/auth";
 
 export default function ContactPage({ session }) {
@@ -23,7 +23,6 @@ export default function ContactPage({ session }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validation des champs obligatoires
         if (!formData.name || !formData.email || !formData.message) {
             setMessage({ type: 'error', text: 'Please fill in all required fields' });
             return;

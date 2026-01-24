@@ -38,9 +38,9 @@ const Header = ({ session, entreprise }) => {
               <span className={`text-2xl font-bold tracking-tight ${scrolled || NO_BANNER_ROUTES.includes(router.pathname) ? 'text-gray-900' : 'text-white'}`}>
                 {entreprise}
               </span>
-              <span className={`text-xs tracking-widest ${scrolled || NO_BANNER_ROUTES.includes(router.pathname) ? 'text-amber-600' : 'text-amber-300'}`}>
+              {/* <span className={`text-xs tracking-widest ${scrolled || NO_BANNER_ROUTES.includes(router.pathname) ? 'text-amber-600' : 'text-amber-300'}`}>
                 EXPERIENCE MOROCCO
-              </span>
+              </span> */}
             </div>
           </Link>
 
