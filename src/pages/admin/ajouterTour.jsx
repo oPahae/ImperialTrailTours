@@ -39,7 +39,7 @@ const AddTourPage = () => {
   const handleMainImageUpload = (e) => {
     const file = e.target.files[0];
     if (file.size > 1048576) {
-      alert("L'image est trop grande");
+      alert("Img very big");
       return;
     }
     else
@@ -51,7 +51,7 @@ const AddTourPage = () => {
   const handleGalleryUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.some(f => f.size > 1048576)) {
-      alert("L'image est trop grande");
+      alert("Img very big");
       return;
     }
     else
@@ -262,15 +262,15 @@ const AddTourPage = () => {
 
       if (response.ok) {
         const result = await response.json();
-        alert('Tour ajouté avec succès !');
+        alert('Tour added succesfully !');
         window.location.href = '/admin/tours';
       } else {
         const error = await response.json();
-        alert(`Erreur : ${error.message}`);
+        alert(`Error : ${error.message}`);
       }
     } catch (error) {
-      console.error('Erreur lors de l\'envoi des données :', error);
-      alert('Une erreur est survenue lors de l\'ajout du tour.');
+      console.error('Error :', error);
+      alert('A connexion error happened.');
     }
   };
 
@@ -740,4 +740,5 @@ export async function getServerSideProps({ req, res }) {
   return {
     props: { session: { connected: true } },
   };
+
 }
