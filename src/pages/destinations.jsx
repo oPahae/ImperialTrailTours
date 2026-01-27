@@ -385,7 +385,7 @@ export default function DestinationPage() {
                         </div>
                         {/* Pagination */}
                         <div className="flex justify-center gap-2 mt-8">
-                            {Array.from({ length: Math.ceil(filteredAndSortedTours.length / toursPerPage) }, (_, i) => i + 1).map((page) => (
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                                 <button
                                     key={page}
                                     onClick={() => goToPage(page)}
