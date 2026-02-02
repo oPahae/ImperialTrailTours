@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 
     if (!capture || capture.status !== 'COMPLETED') {
       await pool.query(
-        "UPDATE reservations SET status = 'rejected' WHERE id = ?",
+        "UPDATE Reservations SET status = 'rejected' WHERE id = ?",
         [reservationId]
       );
 
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
 
     await pool.query(
       `
-      UPDATE reservations
+      UPDATE Reservations
       SET
         paid = ?,
         payment_method = 'paypal',
