@@ -747,7 +747,7 @@ export default function Reserver({ session }) {
                 <span className="font-semibold">Total to pay:</span> {(selectedDateDetails.price * numTravelers).toFixed(2)} $
               </p>
               <p className="text-gray-700">
-                <span className="font-semibold">Advance payment ({percent}%):</span> {((selectedDateDetails.price * numTravelers) * 0.2).toFixed(2)} $
+                <span className="font-semibold">Advance payment ({percent}%):</span> {((selectedDateDetails.price * numTravelers) * percent / 100).toFixed(2)} $
               </p>
               <p className="text-sm text-gray-500 mt-2">
                 The remaining amount should be paid in person when you come for the tour.
@@ -784,9 +784,22 @@ export default function Reserver({ session }) {
         )}
 
         {paymentMethod === 'paypal' && (
-          <div className="max-w-md mx-auto mt-6 p-6 bg-white rounded-xl shadow-xl">
+          <div className="max-w-md mx-auto mt-6 p-6 bg-white rounded-xl shadow-xl">            
+          {/* Transfer info */}
+            <div className='mb-6'>
+              <h2 className="text-xl font-bold mb-2">Paypam Transfer Details</h2>
+              <p className="text-gray-700">
+                <span className="font-semibold">Total to pay:</span> {(selectedDateDetails.price * numTravelers).toFixed(2)} $
+              </p>
+              <p className="text-gray-700">
+                <span className="font-semibold">Advance payment ({percent}%):</span> {((selectedDateDetails.price * numTravelers) * percent / 100).toFixed(2)} $
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                The remaining amount should be paid in person when you come for the tour.
+              </p>
+            </div>
             <PaypalCheckout
-              amount={selectedDateDetails.price * numTravelers}
+              amount={(selectedDateDetails.price * numTravelers) * percent / 100}
               reservationId={reservationId}
               onSuccess={() => {
                 setMsg("Reservation successful! Now you have to proceed to payment.");
