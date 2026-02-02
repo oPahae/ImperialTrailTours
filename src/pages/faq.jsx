@@ -168,7 +168,7 @@ export default function FAQPage() {
 export async function getServerSideProps({ req, res }) {
   const user = verifyAuth(req, res);
 
-  if (user) return {
+  if (user && user.id) return {
     props: { session: { id: user.id, nom: user.nom, prenom: user.prenom, email: user.email } },
   };
 

@@ -1,6 +1,6 @@
 import React from 'react'
 import { useState, useEffect } from 'react';
-import { Menu, X, User } from 'lucide-react';
+import { Menu, X, User, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { navItems, NO_BANNER_ROUTES } from "@/utils/constants"
 import { useRouter } from 'next/router';
@@ -45,7 +45,7 @@ const Header = ({ session, entreprise }) => {
           </Link>
 
           {/* Pc */}
-          <nav className="hidden lg:flex items-center space-x-10">
+          <nav className="hidden lg:flex items-center space-x-4">
             {navItems.filter(nav => (
               nav.admin === router.pathname.includes("admin")
               &&
@@ -54,7 +54,7 @@ const Header = ({ session, entreprise }) => {
               <Link
                 key={index}
                 href={`${item.href}`}
-                className={`px-4 py-2 rounded-lg text-xl font-medium transition-all duration-200 ${scrolled || NO_BANNER_ROUTES.includes(router.pathname)
+                className={`px-4 py-2 rounded-lg text-md font-medium transition-all duration-200 ${scrolled || NO_BANNER_ROUTES.includes(router.pathname)
                   ? 'text-gray-700 hover:text-amber-600 hover:bg-amber-50'
                   : 'text-white hover:bg-white/10'
                   }`}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, Calendar, Users, CheckCircle, User, Globe, Mail, Phone, MapPin, CreditCard } from 'lucide-react';
+import { ChevronRight, Calendar, Users, CheckCircle, User, Globe, Mail, Phone, MapPin, CreditCard, X } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { footerInfos } from '@/utils/constants';
 import { verifyAuth } from "@/middlewares/auth";
@@ -22,7 +22,7 @@ export default function Reserver({ session }) {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [numTravelers, setNumTravelers] = useState(1);
-  const [ask, setAsk] = useState(false);
+  const [showAccountNotification, setShowAccountNotification] = useState(false);
   const [errorZero, setErrorZero] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [showPayement, setShowPayement] = useState(false);
@@ -156,9 +156,6 @@ export default function Reserver({ session }) {
         }
         sendMail();
         setMsg('Reservation successfull! Now you have to proceed to payment.');
-        setTimeout(() => {
-          setAsk(true);
-        }, 1000);
       } else {
         console.error("Erreur lors de la confirmation de la réservation");
       }
@@ -263,6 +260,20 @@ export default function Reserver({ session }) {
     }
   };
 
+  const handleBankPayment = () => {
+    setPaymentMethod('bank');
+    if (!session) {
+      setShowAccountNotification(true);
+    }
+  };
+
+  const handlePaypalSuccess = () => {
+    setMsg("Payment successful!");
+    if (!session) {
+      setShowAccountNotification(true);
+    }
+  };
+
   if (!tourData || !selectedDateDetails) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50 flex items-center justify-center">
@@ -281,29 +292,67 @@ export default function Reserver({ session }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50">
-      {ask && !session &&
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xl flex justify-center items-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-[90%] max-w-md p-9 text-center text-black animate-fadeIn scale-100">
-            <h2 className="text-2xl font-bold mb-3 text-black">Do you want to create an Account ?</h2>
-            <p className="text-black mb-1 font-semibold text-lg">Save time and track your travel history effortlessly.</p>
-            <p className="text-amber-800 mb-8 text-sm">It only takes 30 seconds!</p>
-            <div className="flex justify-between gap-4">
+      {/* Notification pour création de compte */}
+      {showAccountNotification && !session && (
+        <div className="fixed top-6 right-6 z-50 animate-slideInRight">
+          <div className="bg-white rounded-xl shadow-2xl border-l-4 border-green-500 p-6 max-w-md relative">
+            <button
+              onClick={() => setShowAccountNotification(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-start gap-4 mb-4">
+              <div className="bg-green-100 rounded-full p-2 flex-shrink-0">
+                <User className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                  Create Your Account ?
+                </h3>
+                <p className="text-sm text-gray-600 mb-2">
+                  Save time and track your travel history effortlessly.
+                </p>
+                <p className="text-xs text-amber-700 font-medium">
+                  It only takes 30 seconds!
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
               <button
                 onClick={() => router.push(`register?lastname=${travelers[0].lastName}&firstname=${travelers[0].firstName}&email=${travelers[0].email}`)}
-                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-semibold py-2.5 rounded-xl transition-transform transform hover:scale-105 shadow-lg"
+                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white text-sm font-semibold py-2.5 rounded-lg transition-all transform hover:scale-105 shadow-md"
               >
-                Yes, Let’s Go!
+                Yes, Let's Go!
               </button>
               <button
-                onClick={() => setAsk(false)}
-                className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white font-semibold py-2.5 rounded-xl transition-transform transform hover:scale-105 shadow-md"
+                onClick={() => setShowAccountNotification(false)}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-semibold py-2.5 rounded-lg transition-all"
               >
-                No, Thanks
+                Maybe Later
               </button>
             </div>
           </div>
         </div>
-      }
+      )}
+
+      <style jsx>{`
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slideInRight {
+          animation: slideInRight 0.4s ease-out;
+        }
+      `}</style>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
@@ -723,7 +772,7 @@ export default function Reserver({ session }) {
               </div>
               {showPayement &&
                 <div className='w-full flex justify-center items-center gap-6 mb-10'>
-                  <button onClick={() => setPaymentMethod('bank')} className='bg-amber-500 hover:bg-amber-600 duration-200 shadow-xl py-2 px-4 rounded-xl text-white font-bold'>
+                  <button onClick={handleBankPayment} className='bg-amber-500 hover:bg-amber-600 duration-200 shadow-xl py-2 px-4 rounded-xl text-white font-bold'>
                     Bank transfer
                   </button>
                   <button onClick={() => setPaymentMethod('paypal')} className='bg-blue-500 hover:bg-blue-600 duration-200 shadow-xl py-2 px-4 rounded-xl text-white font-bold'>
@@ -736,58 +785,91 @@ export default function Reserver({ session }) {
         )}
 
         {paymentMethod === 'bank' && (
-          <div className="max-w-md mx-auto mt-6 p-6 bg-white rounded-xl shadow-xl flex flex-col gap-4">
-            {/* Bank transfer info */}
-            <div>
-              <h2 className="text-xl font-bold mb-2">Bank Transfer Details</h2>
-              <p className="text-gray-700">
-                <span className="font-semibold">RIB:</span> 1234 5678 9012 3456 7890
-              </p>
-              <p className="text-gray-700">
-                <span className="font-semibold">Total to pay:</span> {(selectedDateDetails.price * numTravelers).toFixed(2)} $
-              </p>
-              <p className="text-gray-700">
-                <span className="font-semibold">Advance payment ({percent}%):</span> {((selectedDateDetails.price * numTravelers) * percent / 100).toFixed(2)} $
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                The remaining amount should be paid in person when you come for the tour.
+          <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col gap-6">
+
+            {/* Header */}
+            <div className="text-center">
+              <h2 className="text-2xl font-extrabold text-gray-900">
+                Bank Transfer
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Secure manual payment
               </p>
             </div>
 
-            {session && (
-              <div className="mt-4">
-                <label className="block text-gray-700 font-semibold mb-2">
-                  Upload your payment receipt (optional)
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setReceiptImage(e.target.files[0])}
-                  className="w-full border border-gray-300 rounded-lg p-2 mb-4"
-                />
-                <button
-                  onClick={handleInsertImg}
-                  disabled={uploadLoading}
-                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl shadow-lg transition-all disabled:opacity-50"
-                >
-                  {uploadLoading ? 'Uploading...' : 'Send'}
-                </button>
-                {uploadMsg && (
-                  <p className="text-sm mt-3 text-gray-600">{uploadMsg}</p>
-                )}
-                <p className="text-sm text-gray-500 mt-6">
-                  You don’t have to upload the receipt now. You can upload it anytime from the Reservations section in your profile.
-                </p>
+            {/* Divider */}
+            <div className="h-px bg-gray-200" />
+
+            {/* Bank Info */}
+            <div className="space-y-3">
+              <div className="flex justify-between text-gray-700">
+                <span className="font-semibold">RIB</span>
+                <span className="font-mono tracking-wide">
+                  {footerInfos.rib}
+                </span>
               </div>
-            )}
+
+              <div className="flex justify-between text-gray-700">
+                <span className="font-semibold">Total amount</span>
+                <span className="font-bold">
+                  {(selectedDateDetails.price * numTravelers).toFixed(2)} $
+                </span>
+              </div>
+
+              <div className="flex justify-between text-green-700 bg-green-50 p-3 rounded-lg">
+                <span className="font-semibold">
+                  Advance ({percent}%)
+                </span>
+                <span className="font-bold">
+                  {((selectedDateDetails.price * numTravelers) * percent / 100).toFixed(2)} $
+                </span>
+              </div>
+
+              <p className="text-xs text-gray-500">
+                The remaining balance will be paid in person on the day of the tour.
+              </p>
+            </div>
+
+            {/* Upload Section */}
+            <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Payment receipt (optional)
+              </label>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setReceiptImage(e.target.files[0])}
+                className="w-full text-sm border border-gray-300 rounded-lg p-2 bg-white"
+              />
+
+              <button
+                onClick={handleInsertImg}
+                disabled={uploadLoading}
+                className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-xl shadow-md transition-all disabled:opacity-50"
+              >
+                {uploadLoading ? 'Uploading...' : 'Send receipt'}
+              </button>
+
+              {uploadMsg && (
+                <p className="text-xs mt-3 text-gray-600 text-center">
+                  {uploadMsg}
+                </p>
+              )}
+
+              <p className="text-xs text-gray-500 mt-4 text-center">
+                You can upload the receipt later from your profile → Reservations.
+              </p>
+            </div>
+
           </div>
         )}
 
         {paymentMethod === 'paypal' && (
-          <div className="max-w-md mx-auto mt-6 p-6 bg-white rounded-xl shadow-xl">            
-          {/* Transfer info */}
+          <div className="max-w-md mx-auto mt-6 p-6 bg-white rounded-xl shadow-xl">
+            {/* Transfer info */}
             <div className='mb-6'>
-              <h2 className="text-xl font-bold mb-2">Paypam Transfer Details</h2>
+              <h2 className="text-xl font-bold mb-2">Paypal Transfer Details</h2>
               <p className="text-gray-700">
                 <span className="font-semibold">Total to pay:</span> {(selectedDateDetails.price * numTravelers).toFixed(2)} $
               </p>
@@ -801,9 +883,7 @@ export default function Reserver({ session }) {
             <PaypalCheckout
               amount={(selectedDateDetails.price * numTravelers) * percent / 100}
               reservationId={reservationId}
-              onSuccess={() => {
-                setMsg("Reservation successful! Now you have to proceed to payment.");
-              }}
+              onSuccess={handlePaypalSuccess}
             />
           </div>
         )}
@@ -816,7 +896,7 @@ export default function Reserver({ session }) {
 export async function getServerSideProps({ req, res }) {
   const user = verifyAuth(req, res);
 
-  if (user) return {
+  if (user && user.id) return {
     props: { session: { id: user.id, nom: user.nom, prenom: user.prenom, email: user.email } },
   };
 

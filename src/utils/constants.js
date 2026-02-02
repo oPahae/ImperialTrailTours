@@ -2,7 +2,7 @@ import { Facebook, Instagram, Linkedin, Youtube } from 'lucide-react';
 
 export const NO_BANNER_ROUTES = [
     "/tour", "/admin/tours", "/reserver", "/admin/ajouterTour", "/admin/modifierTour", "/admin/reservations",
-    "/admin/blog", "/admin/ajouterBlog", "/admin/modifierBlog", "/me", "/about", "/privacy"
+    "/admin/blog", "/admin/ajouterBlog", "/admin/modifierBlog", "/me", "/about", "/privacy", "/myreservations", "/profile"
 ];
 
 export const navItems = [
@@ -32,8 +32,13 @@ export const navItems = [
         admin: false,
     },
     {
-        titre: "Me",
-        href: "me",
+        titre: "My Reservations",
+        href: "myreservations",
+        admin: false,
+    },
+    {
+        titre: "Profile",
+        href: "profile",
         admin: false,
     },
     ////////////////////////////////////
@@ -198,7 +203,8 @@ export const footerInfos = {
     tel: "+212 661-377968",
     email: "contact@imperialtrailtours.com",
     location: "A123 Residence Soraya Bloc A Imm MHamid 9, Marrakech",
-    domaine: "https://www.imperialtrailtours.com"
+    domaine: "https://www.imperialtrailtours.com",
+    rib: '1234 5678 9012 3456 7890',
 }
 
 export const destination = {
