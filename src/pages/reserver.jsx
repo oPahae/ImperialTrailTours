@@ -28,17 +28,17 @@ export default function Reserver({ session }) {
   const [showPayement, setShowPayement] = useState(false);
   const [reservationId, setReservationId] = useState(null);
   const [travelers, setTravelers] = useState([{
-    prefix: 'Mr',
+    prefix: '',
     firstName: session ? session.nom : '',
     lastName: session ? session.prenom : '',
-    birthDate: '2003-10-01',
-    phone: '0713947508',
-    email: session ? session.email : 'lam.bahae7@gmail.com',
-    nationality: 'M',
+    birthDate: '',
+    phone: '',
+    email: session ? session.email : '',
+    nationality: '',
     passport: '',
     passportExpiry: '',
-    country: 'Morocco',
-    city: 'Berrechid',
+    country: '',
+    city: '',
     address: '',
     province: '',
     postalCode: ''
@@ -810,4 +810,5 @@ export async function getServerSideProps({ req, res }) {
   else return {
     props: { session: null },
   };
+
 }
