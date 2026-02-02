@@ -49,7 +49,9 @@ const Header = ({ session, entreprise }) => {
             {navItems.filter(nav => (
               nav.admin === router.pathname.includes("admin")
               &&
-              (nav.titre !== "Me" || (session && nav.titre === "Me"))
+              (nav.titre !== "Profile" || (session && nav.titre === "Profile"))
+              &&
+              (nav.titre !== "My Reservations" || (session && nav.titre === "My Reservations"))
             )).map((item, index) => (
               <Link
                 key={index}
