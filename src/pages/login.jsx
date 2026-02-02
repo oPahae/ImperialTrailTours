@@ -60,7 +60,7 @@ export default function LoginPage() {
 
             setSuccess(data.message);
             setTimeout(() => {
-                router.push("/");
+                router.push("/myreservations");
             }, 1500);
         } catch (err) {
             setError("Une erreur est survenue. Veuillez réessayer.");
@@ -155,7 +155,7 @@ export default function LoginPage() {
 
 export async function getServerSideProps({ req, res }) {
     const user = verifyAuth(req, res);
-    if (user) {
+    if (user && user.id) {
         return {
             redirect: {
                 destination: "./",

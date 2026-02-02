@@ -74,7 +74,7 @@ export default function MyApp({ Component, pageProps }) {
 export async function getServerSideProps({ req, res }) {
   const user = verifyAuth(req, res)
 
-  if (user) {
+  if (user && user.id) {
     return {
       props: {
         session: {
