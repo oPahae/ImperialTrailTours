@@ -72,6 +72,11 @@ CREATE TABLE Reservations (
     dateReserv DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(50) DEFAULT "pending",
     userID INT DEFAULT NULL,
+    paid BOOLEAN DEFAULT false,
+    payment_method VARCHAR(20),
+    paid_amount DECIMAL(10,2) NULL,
+    currency VARCHAR(3) DEFAULT 'USD';
+    img BLOB DEFAULT NULL;
     FOREIGN KEY (tourID) REFERENCES Tours(id) ON DELETE CASCADE,
     FOREIGN KEY (dateR) REFERENCES Dates(id) ON DELETE CASCADE,
     FOREIGN KEY (userID) REFERENCES Users(id) ON DELETE SET NULL
@@ -127,3 +132,10 @@ CREATE TABLE Users (
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL
 );
+
+CREATE TABLE Percent (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    value INT DEFAULT 20
+);
+
+INSERT INTO Percent (value) VALUES (20);

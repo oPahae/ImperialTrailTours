@@ -6,11 +6,22 @@ import { verifyAuth } from "@/middlewares/auth";
 
 export default function Me({ session }) {
   const [reservations, setReservations] = useState([]);
-  const [localReservation, setLocalReservation] = useState({});
-  const [showLocalReservation, setShowLocalReservation] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [receiptImage, setReceiptImage] = useState(null);
+  const [uploadMsg, setUploadMsg] = useState('');
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [percent, setPercent] = useState(20);
   const cardRefs = useRef([]);
+
+  useEffect(() => {
+    const fetchPercent = async () => {
+      const res = await fetch("/api/payment/getPercent");
+      const data = await res.json();
+      setPercent(data.value)
+    }
+    fetchPercent();
+  })
 
   useEffect(() => {
     cardRefs.current.forEach((card, index) => {
@@ -23,14 +34,28 @@ export default function Me({ session }) {
   }, [reservations]);
 
   useEffect(() => {
-    const fetchReservations = async () => {
+    const fetchAllReservations = async () => {
       try {
-        const response = await fetch(`/api/reservations/getMe?id=${session ? session.id : null}`);
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "Impossible de récupérer vos réservations.");
+        let allReservations = [];
+
+        if (session?.id) {
+          const res = await fetch(`/api/reservations/getMe?id=${session.id}`);
+          const data = await res.json();
+          if (!res.ok)
+            throw new Error(data.message || "Impossible de récupérer vos réservations.");
+          allReservations = data.reservations || [];
         }
-        setReservations(data.reservations);
+
+        const storedId = localStorage.getItem("localReservationId");
+        if (storedId) {
+          const resLocal = await fetch(`/api/reservations/getID?id=${storedId}`);
+          const dataLocal = await resLocal.json();
+          if (resLocal.ok && dataLocal.reservations?.length)
+            allReservations.push(dataLocal.reservations[0]);
+        }
+
+        setReservations(allReservations);
+        console.log(allReservations);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -38,27 +63,8 @@ export default function Me({ session }) {
       }
     };
 
-    const fetchLocalReservations = async (id) => {
-      try {
-        const response = await fetch(`/api/reservations/getID?id=${id}`);
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "Impossible de récupérer vos réservations.");
-        }
-        setLocalReservation(data.reservations[0]);
-        setShowLocalReservation(true);
-        console.log(data.reservations[0])
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReservations();
-    const stored = localStorage.getItem('localReservationId');
-    if(stored) fetchLocalReservations(stored);
-  }, []);
+    fetchAllReservations();
+  }, [session?.id]);
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "long", day: "numeric" };
@@ -86,6 +92,61 @@ export default function Me({ session }) {
         alert(data.message)
     }).catch(err => alert(err))
   }
+
+  const handleInsertImg = async (reservationId, amount) => {
+    if (!receiptImage) {
+      setUploadMsg('Please select an image first.');
+      return;
+    }
+
+    if (!reservationId) {
+      setUploadMsg('Reservation not found.');
+      return;
+    }
+
+    try {
+      setUploadLoading(true);
+      setUploadMsg('');
+
+      const toBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+      });
+
+      const base64Data = await toBase64(receiptImage);
+
+      const base64String = base64Data.split(',')[1];
+
+      const res = await fetch('/api/payment/insertImg', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reservationId,
+          image: base64String,
+          amount
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setUploadMsg('Receipt uploaded successfully.');
+        setReceiptImage(null);
+      } else {
+        setUploadMsg(data.message || 'Upload failed.');
+      }
+
+    } catch (error) {
+      console.error(error);
+      setUploadMsg('Server error while uploading image.');
+    } finally {
+      setUploadLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -137,8 +198,6 @@ export default function Me({ session }) {
               </div>
             ) : (
               <div className="space-y-6">
-                <span className="font-bold text-amber-400">My reservations</span>
-                <hr />
                 {reservations.length === 0 ?
                   <div className="text-center py-12">
                     <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
@@ -193,6 +252,52 @@ export default function Me({ session }) {
                         </div>
 
                         <div className="mt-6 pt-4 border-t border-gray-200">
+                          <h4 className="text-sm font-medium text-gray-900 mb-2">Payment</h4>
+                          {reservation.paid ?
+                            <div className="w-full">
+                              <div className="text-green-500 font-bold flex gap-2 items-center justify-start">
+                                <CheckCircle size={18} />
+                                <p>You paid</p>
+                              </div>
+                              <div>
+                                <span className="font-bold text-black">Paid Amount : {' '}</span> {reservation.paid_amount} {reservation.currency || ''}
+                              </div>
+                              <div>
+                                <span className="font-bold text-black">Payment Method : {' '}</span> {reservation.payment_method}
+                              </div>
+                            </div>
+                            :
+                            <div>
+                              <div className="text-amber-500 font-bold flex gap-2 items-center justify-start mb-2">
+                                <AlertCircle size={18} />
+                                <p>You didn't pay yet</p>
+                              </div>
+                              <div className="flex gap-2 items-center justify-start mb-2">
+                                <p className="text-black font-bold">Advance payment : {' '}</p>
+                                <span>{reservation.prix * reservation.voyageurs.length * percent / 100} $</span>
+                              </div>
+                              <p>* The remaining amount should be paid in person when you come for the tour *</p>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setReceiptImage(e.target.files[0])}
+                                className="w-full border border-gray-300 rounded-lg p-2 my-4"
+                              />
+                              <button
+                                onClick={() => handleInsertImg(reservation.id, reservation.prix * reservation.voyageurs.length * percent / 100)}
+                                disabled={uploadLoading}
+                                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl shadow-lg transition-all disabled:opacity-50"
+                              >
+                                {uploadLoading ? 'Uploading...' : 'Send'}
+                              </button>
+                              {uploadMsg && (
+                                <p className="text-sm mt-3 text-gray-600">{uploadMsg}</p>
+                              )}
+                            </div>
+                          }
+                        </div>
+
+                        <div className="mt-6 pt-4 border-t border-gray-200">
                           <h4 className="text-sm font-medium text-gray-900 mb-2">Voyageurs</h4>
                           <div className="space-y-3">
                             {reservation.voyageurs.map((voyageur) => (
@@ -211,68 +316,6 @@ export default function Me({ session }) {
                       </div>
                     </div>
                   ))
-                }
-
-                {showLocalReservation &&
-                  <>
-                    <span className="font-bold text-amber-400">My reservations without account</span>
-                    <hr />
-                    <div
-                      key={localReservation.id}
-                      className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-                    >
-                      <div className="p-6">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900">{localReservation.titre}</h3>
-                            <p className="mt-1 text-sm text-gray-500">{localReservation.descr}</p>
-                          </div>
-                          <div className={`flex items-center ${getStatusInfo(localReservation.status).color}`}>
-                            {getStatusInfo(localReservation.status).icon}
-                            <span className="ml-1 text-sm font-medium">{getStatusInfo(localReservation.status).text}</span>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Calendar className="mr-2 h-4 w-4 text-amber-500" />
-                            <span>
-                              From {formatDate(localReservation.dateDeb)} to {formatDate(localReservation.dateFin)}
-                            </span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <MapPin className="mr-2 h-4 w-4 text-amber-500" />
-                            <span>{localReservation.places}</span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <Users className="mr-2 h-4 w-4 text-amber-500" />
-                            <span>{localReservation.voyageurs.length} traveler(s)</span>
-                          </div>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <DollarSign className="mr-2 h-4 w-4 text-amber-500" />
-                            <span>{localReservation.prix} $</span>
-                          </div>
-                        </div>
-
-                        <div className="mt-6 pt-4 border-t border-gray-200">
-                          <h4 className="text-sm font-medium text-gray-900 mb-2">Travelers</h4>
-                          <div className="space-y-3">
-                            {localReservation.voyageurs.map((voyageur) => (
-                              <div key={voyageur.id} className="flex items-center text-sm">
-                                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
-                                  <Users className="h-4 w-4 text-amber-600" />
-                                </div>
-                                <div>
-                                  <p className="font-medium text-gray-900">{voyageur.nom} {voyageur.prenom}</p>
-                                  <p className="text-gray-500">{voyageur.email}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </>
                 }
               </div>
             )}

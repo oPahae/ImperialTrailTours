@@ -341,12 +341,15 @@ const TourPage = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 border border-gray-200 text-center">
-                      <Link
-                        href={`reserver?id=${id}&date=${date.id}`}
-                        className="bg-amber-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-amber-700 transition-colors"
+                      <button
+                        onClick={() => {
+                          if(date.spots > 0)
+                            router.push(`reserver?id=${id}&date=${date.id}`)
+                        }}
+                        className={`${date.spots > 0 ? "bg-amber-600 hover:bg-amber-700" : "bg-gray-600 cursor-not-allowed"} text-white px-6 py-2 rounded-lg font-semibold transition-colors`}
                       >
                         Book
-                      </Link>
+                      </button>
                     </td>
                   </tr>
                 ))}

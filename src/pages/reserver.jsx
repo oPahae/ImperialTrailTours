@@ -4,26 +4,41 @@ import { useRouter } from 'next/router';
 import { footerInfos } from '@/utils/constants';
 import { verifyAuth } from "@/middlewares/auth";
 
+import dynamic from 'next/dynamic';
+
+const PaypalCheckout = dynamic(
+  () => import('@/components/Paypal'),
+  { ssr: false }
+);
+
 export default function Reserver({ session }) {
   const router = useRouter();
   const { id, date } = router.query;
   const [step, setStep] = useState(1);
   const [tourDate, setTourDate] = useState('');
+  const [percent, setPercent] = useState('');
+  const [receiptImage, setReceiptImage] = useState(null);
+  const [uploadMsg, setUploadMsg] = useState('');
+  const [uploadLoading, setUploadLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [numTravelers, setNumTravelers] = useState(1);
   const [ask, setAsk] = useState(false);
+  const [errorZero, setErrorZero] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [showPayement, setShowPayement] = useState(false);
+  const [reservationId, setReservationId] = useState(null);
   const [travelers, setTravelers] = useState([{
-    prefix: '',
+    prefix: 'Mr',
     firstName: session ? session.nom : '',
     lastName: session ? session.prenom : '',
-    birthDate: '',
-    phone: '',
-    email: session ? session.email : '',
-    nationality: '',
+    birthDate: '2003-10-01',
+    phone: '0713947508',
+    email: session ? session.email : 'lam.bahae7@gmail.com',
+    nationality: 'M',
     passport: '',
     passportExpiry: '',
-    country: '',
-    city: '',
+    country: 'Morocco',
+    city: 'Berrechid',
     address: '',
     province: '',
     postalCode: ''
@@ -37,15 +52,21 @@ export default function Reserver({ session }) {
     if (id && date) {
       const fetchData = async () => {
         try {
-          const [tourResponse, dateResponse] = await Promise.all([
+          const [tourResponse, dateResponse, percentResponse] = await Promise.all([
             fetch(`/api/tours/getOneClient?id=${id}`),
-            fetch(`/api/reservations/getDateInfos?id=${date}`)
+            fetch(`/api/reservations/getDateInfos?id=${date}`),
+            fetch(`/api/payment/getPercent`),
           ]);
           const tourData = await tourResponse.json();
           const dateData = await dateResponse.json();
+          const percentData = await percentResponse.json();
           setTourData(tourData.tour);
           setSelectedDateDetails(dateData.date);
+          setPercent(percentData.value);
           setTourDate(`${dateData.date.startDate} - ${dateData.date.endDate}`);
+          if (dateData.date.spots <= 0) {
+            setErrorZero(true);
+          }
         } catch (error) {
           console.error("Erreur lors de la récupération des données :", error);
         }
@@ -95,8 +116,8 @@ export default function Reserver({ session }) {
 
   const validateStep2 = () => {
     return travelers.every(t =>
-      t.prefix && t.firstName && t.lastName && t.birthDate &&
-      t.email && t.nationality && t.country && t.city && t.address
+      t.prefix && t.firstName && t.lastName &&
+      t.birthDate && t.email && t.country && t.city
     );
   };
 
@@ -129,9 +150,12 @@ export default function Reserver({ session }) {
 
       if (response.ok) {
         const result = await response.json();
-        localStorage.setItem('localReservationId', result.reservationId);
+        setReservationId(result.reservationId);
+        if (!session) {
+          localStorage.setItem('localReservationId', result.reservationId);
+        }
         sendMail();
-        setMsg('Booking confirmed! You will receive a confirmation email shortly.');
+        setMsg('Reservation successfull! Now you have to proceed to payment.');
         setTimeout(() => {
           setAsk(true);
         }, 1000);
@@ -184,10 +208,73 @@ export default function Reserver({ session }) {
     }
   };
 
+  const handleInsertImg = async () => {
+    if (!receiptImage) {
+      setUploadMsg('Please select an image first.');
+      return;
+    }
+
+    if (!reservationId) {
+      setUploadMsg('Reservation not found.');
+      return;
+    }
+
+    try {
+      setUploadLoading(true);
+      setUploadMsg('');
+
+      const toBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+      });
+
+      const base64Data = await toBase64(receiptImage);
+
+      const base64String = base64Data.split(',')[1];
+
+      const res = await fetch('/api/payment/insertImg', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reservationId,
+          image: base64String,
+          amount: (selectedDateDetails.price * numTravelers) * percent / 100
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setUploadMsg('Receipt uploaded successfully.');
+        setReceiptImage(null);
+      } else {
+        setUploadMsg(data.message || 'Upload failed.');
+      }
+
+    } catch (error) {
+      console.error(error);
+      setUploadMsg('Server error while uploading image.');
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
   if (!tourData || !selectedDateDetails) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50 flex items-center justify-center">
         <p className="text-lg text-gray-600">Loading booking data...</p>
+      </div>
+    );
+  }
+
+  if (errorZero) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50 flex items-center justify-center">
+        <p className="text-lg text-gray-600">This tour have 0 spots available</p>
       </div>
     );
   }
@@ -208,7 +295,7 @@ export default function Reserver({ session }) {
                 Yes, Let’s Go!
               </button>
               <button
-                onClick={() => router.push('destinations')}
+                onClick={() => setAsk(false)}
                 className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white font-semibold py-2.5 rounded-xl transition-transform transform hover:scale-105 shadow-md"
               >
                 No, Thanks
@@ -381,11 +468,10 @@ export default function Reserver({ session }) {
                         Nationality <span className='text-red-500'>*</span>
                       </label>
                       <input
-                        required
                         type="text"
                         value={traveler.nationality}
                         onChange={(e) => updateTraveler(index, 'nationality', e.target.value)}
-                        className={`w-full px-4 py-2.5 border-2 ${traveler.nationality ? "border-green-500" : "border-red-500"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.nationality ? "border-gray-500" : "border-gray-200"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div>
@@ -445,21 +531,19 @@ export default function Reserver({ session }) {
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Address <span className='text-red-500'>*</span></label>
                       <input
-                        required
                         type="text"
                         value={traveler.address}
                         onChange={(e) => updateTraveler(index, 'address', e.target.value)}
-                        className={`w-full px-4 py-2.5 border-2 ${traveler.address ? "border-green-500" : "border-red-500"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.address ? "border-gray-500" : "border-gray-200"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code <span className='text-red-500'>*</span></label>
                       <input
-                        required
                         type="text"
                         value={traveler.postalCode}
                         onChange={(e) => updateTraveler(index, 'postalCode', e.target.value)}
-                        className={`w-full px-4 py-2.5 border-2 ${traveler.postalCode ? "border-green-500" : "border-red-500"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
+                        className={`w-full px-4 py-2.5 border-2 ${traveler.postalCode ? "border-gray-500" : "border-gray-200"} rounded-lg focus:border-amber-500 focus:outline-none transition-colors`}
                       />
                     </div>
                   </div>
@@ -630,16 +714,87 @@ export default function Reserver({ session }) {
               {/* Confirmation button */}
               <div className="px-8 pb-8">
                 <button
-                  onClick={handleFinalBooking}
+                  onClick={() => { setShowPayement(true); handleFinalBooking(); }}
                   className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center text-lg"
                 >
                   <CheckCircle className="mr-2 w-6 h-6" />
-                  Confirm Reservation
+                  Proceed to payment
                 </button>
               </div>
+              {showPayement &&
+                <div className='w-full flex justify-center items-center gap-6 mb-10'>
+                  <button onClick={() => setPaymentMethod('bank')} className='bg-amber-500 hover:bg-amber-600 duration-200 shadow-xl py-2 px-4 rounded-xl text-white font-bold'>
+                    Bank transfer
+                  </button>
+                  <button onClick={() => setPaymentMethod('paypal')} className='bg-blue-500 hover:bg-blue-600 duration-200 shadow-xl py-2 px-4 rounded-xl text-white font-bold'>
+                    Paypal payment
+                  </button>
+                </div>
+              }
             </div>
           </div>
         )}
+
+        {paymentMethod === 'bank' && (
+          <div className="max-w-md mx-auto mt-6 p-6 bg-white rounded-xl shadow-xl flex flex-col gap-4">
+            {/* Bank transfer info */}
+            <div>
+              <h2 className="text-xl font-bold mb-2">Bank Transfer Details</h2>
+              <p className="text-gray-700">
+                <span className="font-semibold">RIB:</span> 1234 5678 9012 3456 7890
+              </p>
+              <p className="text-gray-700">
+                <span className="font-semibold">Total to pay:</span> {(selectedDateDetails.price * numTravelers).toFixed(2)} $
+              </p>
+              <p className="text-gray-700">
+                <span className="font-semibold">Advance payment ({percent}%):</span> {((selectedDateDetails.price * numTravelers) * 0.2).toFixed(2)} $
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                The remaining amount should be paid in person when you come for the tour.
+              </p>
+            </div>
+
+            {session && (
+              <div className="mt-4">
+                <label className="block text-gray-700 font-semibold mb-2">
+                  Upload your payment receipt (optional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setReceiptImage(e.target.files[0])}
+                  className="w-full border border-gray-300 rounded-lg p-2 mb-4"
+                />
+                <button
+                  onClick={handleInsertImg}
+                  disabled={uploadLoading}
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl shadow-lg transition-all disabled:opacity-50"
+                >
+                  {uploadLoading ? 'Uploading...' : 'Send'}
+                </button>
+                {uploadMsg && (
+                  <p className="text-sm mt-3 text-gray-600">{uploadMsg}</p>
+                )}
+                <p className="text-sm text-gray-500 mt-6">
+                  You don’t have to upload the receipt now. You can upload it anytime from the Reservations section in your profile.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {paymentMethod === 'paypal' && (
+          <div className="max-w-md mx-auto mt-6 p-6 bg-white rounded-xl shadow-xl">
+            <PaypalCheckout
+              amount={selectedDateDetails.price * numTravelers}
+              reservationId={reservationId}
+              onSuccess={() => {
+                setMsg("Reservation successful! Now you have to proceed to payment.");
+              }}
+            />
+          </div>
+        )}
+
       </div>
     </div>
   );

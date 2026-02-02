@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Send, User, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
 import { verifyAuth } from "@/middlewares/auth";
+import { footerInfos } from '@/utils/constants';
 
 export default function ContactPage({ session }) {
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -71,7 +72,7 @@ export default function ContactPage({ session }) {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white comp">
-            {/* Hero Section */}
+            {/* Hero */}
             <div className="relative bg-gradient-to-r from-amber-700 to-amber-900 text-white">
                 <div className="absolute inset-0 opacity-25">
                     <div className="absolute inset-0" style={{
@@ -90,6 +91,7 @@ export default function ContactPage({ session }) {
                 </div>
             </div>
 
+            {/* Form */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
                 <div className="">
                     <div className="">
@@ -98,8 +100,8 @@ export default function ContactPage({ session }) {
 
                             {message.text && (
                                 <div className={`mb-6 p-4 rounded-lg flex items-center ${message.type === 'success'
-                                        ? 'bg-green-50 text-green-800 border-2 border-green-200'
-                                        : 'bg-red-50 text-red-800 border-2 border-red-200'
+                                    ? 'bg-green-50 text-green-800 border-2 border-green-200'
+                                    : 'bg-red-50 text-red-800 border-2 border-red-200'
                                     }`}>
                                     {message.type === 'success' ? (
                                         <CheckCircle className="w-5 h-5 mr-3 flex-shrink-0" />
@@ -173,13 +175,13 @@ export default function ContactPage({ session }) {
                                     </div>
 
                                     <div className="flex items-center justify-between pt-4">
-                                        <p className="text-sm text-gray-500">* Required fields</p>
+                                        <p className="text-sm text-gray-500">* Required</p>
                                         <button
                                             onClick={handleSubmit}
                                             className="bg-gradient-to-r from-amber-700 to-amber-900 text-white px-8 py-3 rounded-lg font-semibold hover:from-amber-800 hover:to-amber-950 transition flex items-center gap-2"
                                         >
                                             <Send className="w-5 h-5" />
-                                            Send Message
+                                            Send
                                         </button>
                                     </div>
                                 </div>
@@ -188,18 +190,39 @@ export default function ContactPage({ session }) {
                     </div>
                 </div>
             </div>
+
+            {/* Map */}
+            <div className="mt-12 bg-white rounded-xl shadow-md border border-gray-100 p-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                    Our Location
+                </h3>
+
+                <p className="text-gray-600 mb-6">
+                    A123 Residence Soraya Bloc A Imm MHamid 9, Marrakech
+                </p>
+
+                <div className="w-full h-[200px] md:h-[600px] rounded-xl overflow-hidden border-2 border-amber-200">
+                    <iframe
+                        title="Google Maps Location"
+                        src={`https://www.google.com/maps?q=${encodeURIComponent(footerInfos.location)}&output=embed`}
+                        className="w-full h-full border-0"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                    />
+                </div>
+            </div>
         </div>
     );
 }
 
 export async function getServerSideProps({ req, res }) {
-  const user = verifyAuth(req, res);
+    const user = verifyAuth(req, res);
 
-  if (user) return {
-    props: { session: { id: user.id, nom: user.nom, prenom: user.prenom, email: user.email } },
-  };
+    if (user) return {
+        props: { session: { id: user.id, nom: user.nom, prenom: user.prenom, email: user.email } },
+    };
 
-  else return {
-    props: { session: null },
-  };
+    else return {
+        props: { session: null },
+    };
 }
