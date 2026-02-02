@@ -9,6 +9,10 @@ html {
     user-select: none;
 }
 
+.cursor-not-allowed {
+    cursor: not-allowed !important;
+}
+
 button {
     cursor: pointer;
 }

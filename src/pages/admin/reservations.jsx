@@ -5,6 +5,7 @@ import { verifyAuth } from "@/middlewares/adminAuth";
 
 export default function AdminReservations() {
   const [activeTab, setActiveTab] = useState('pending');
+  const [displayImg, setDisplayImg] = useState(null);
   const [reservations, setReservations] = useState({
     pending: [],
     history: [],
@@ -161,6 +162,13 @@ export default function AdminReservations() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50">
+      {displayImg &&
+        <div onClick={() => setDisplayImg('')} className='w-full h-screen fixed inset-0 z-50 cursor-pointer bg-black/20 backdrop-blur-2xl flex items-center justify-center'>
+          <div className='w-full md:w-2/3 overflow-y-scroll'>
+            <img src={displayImg} className='w-full' />
+          </div>
+        </div>
+      }
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
@@ -251,6 +259,23 @@ export default function AdminReservations() {
                       </div>
                       <p className="text-lg font-semibold text-amber-700">{reservation.tourTitle}</p>
                       <p className="text-sm text-gray-600">{reservation.tourType} • {reservation.days} Days</p>
+
+                      {reservation.payment_method === 'paypal' &&
+                        <div className='mt-4 flex justify-center items-center gap-2 font-bold'>
+                          <CheckCircle size={18} className='text-blue-500' />
+                          <span className='text-blue-500'>Paypal</span>
+                          <span>({reservation.paid_amount} {reservation.currency})</span>
+                        </div>
+                      }
+                      
+                      {reservation.img &&
+                        <div className='mt-4 flex justify-center items-center gap-2 font-bold'>
+                          <CheckCircle size={18} className='text-green-500' />
+                          <span className='text-green-500'>Bank</span>
+                          <span>({reservation.paid_amount || "0 MAD"})</span>
+                          <button onClick={() => setDisplayImg(reservation.img)} className='underline'>See photo</button>
+                        </div>
+                      }
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-600">Booking Date</p>
@@ -328,13 +353,15 @@ export default function AdminReservations() {
                               </p>
                               <p className="font-medium text-gray-800">{traveler.phone || 'N/A'}</p>
                             </div>
-                            <div>
-                              <p className="text-gray-600 flex items-center mb-1">
-                                <Globe className="w-4 h-4 mr-1" />
-                                Nationality
-                              </p>
-                              <p className="font-medium text-gray-800">{traveler.nationality}</p>
-                            </div>
+                            {traveler.nationality &&
+                              <div>
+                                <p className="text-gray-600 flex items-center mb-1">
+                                  <Globe className="w-4 h-4 mr-1" />
+                                  Nationality
+                                </p>
+                                <p className="font-medium text-gray-800">{traveler.nationality}</p>
+                              </div>
+                            }
                             <div>
                               <p className="text-gray-600 mb-1">Date of Birth</p>
                               <p className="font-medium text-gray-800">{new Date(traveler.birthDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
@@ -345,7 +372,7 @@ export default function AdminReservations() {
                                 Address
                               </p>
                               <p className="font-medium text-gray-800">
-                                {traveler.address}, {traveler.city}, {traveler.province} {traveler.postalCode}, {traveler.country}
+                                {traveler.address ? `${traveler.address}, ` : ''} {traveler.city}, {traveler.province} {traveler.postalCode ? `${traveler.postalCode}, ` : ''} {traveler.country}
                               </p>
                             </div>
                           </div>

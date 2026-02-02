@@ -195,9 +195,9 @@ export const socialLinks = [
 
 export const footerInfos = {
     entreprise: "Imperial Trail Tours",
-    tel: "+2120000000",
+    tel: "+212 661-377968",
     email: "contact@imperialtrailtours.com",
-    location: "Casablanca, Maroc",
+    location: "A123 Residence Soraya Bloc A Imm MHamid 9, Marrakech",
     domaine: "https://www.imperialtrailtours.com"
 }
 

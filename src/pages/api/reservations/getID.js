@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   try {
     const [userReservations] = await pool.query(`
-      SELECT r.id, r.status, r.dateReserv,
+      SELECT r.id, r.status, r.dateReserv, r.paid, r.paid_amount, payment_method,
              d.id as dateId, d.dateDeb, d.dateFin, d.prix,
              t.id as tourId, t.titre, t.descr, t.places
       FROM Reservations r
@@ -27,7 +27,6 @@ export default async function handler(req, res) {
       })
     );
 
-    console.log(reservationsWithVoyageurs)
     return res.status(200).json({ reservations: reservationsWithVoyageurs });
   } catch (error) {
     console.error('Erreur lors de la récupération des réservations :', error);

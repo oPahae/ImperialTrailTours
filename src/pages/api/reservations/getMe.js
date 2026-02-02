@@ -8,7 +8,7 @@ export default async function handler(req, res) {
 
   try {
     const [userReservations] = await pool.query(`
-      SELECT r.id, r.status, r.dateReserv,
+      SELECT r.id, r.status, r.dateReserv, r.paid, r.payment_method, paid_amount,
              d.id as dateId, d.dateDeb, d.dateFin, d.prix,
              t.id as tourId, t.titre, t.descr, t.places
       FROM Reservations r
@@ -29,8 +29,7 @@ export default async function handler(req, res) {
       })
     );
 
-    console.log(reservationsWithVoyageurs)
-    return res.status(200).json({ reservations: reservationsWithVoyageurs });
+    return res.status(200).json({ reservations: reservationsWithVoyageurs.reverse() });
   } catch (error) {
     console.error('Erreur lors de la récupération des réservations :', error);
     return res.status(500).json({ message: 'Une erreur est survenue lors de la récupération de vos réservations.' });

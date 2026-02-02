@@ -27,6 +27,10 @@ export default async function handler(req, res) {
         d.dateFin AS endDate,
         d.prix AS price,
         r.dateReserv AS bookingDate,
+        r.payment_method,
+        r.paid_amount,
+        r.currency,
+        r.img,
         (SELECT COUNT(*) FROM Voyageurs WHERE reservID = r.id) AS numTravelers,
         (d.prix * (SELECT COUNT(*) FROM Voyageurs WHERE reservID = r.id)) AS totalPrice
       FROM Reservations r
@@ -56,8 +60,14 @@ export default async function handler(req, res) {
           WHERE reservID = ?
         `, [reservation.id]);
 
+        let imgBase64 = null;
+        if (reservation.img) {
+          imgBase64 = `data:image/jpeg;base64,${reservation.img.toString('base64')}`;
+        }
+
         return {
           ...reservation,
+          img: imgBase64,
           bookingRef: `BK-${new Date(reservation.bookingDate).getFullYear()}-${String(reservation.id).padStart(3, '0')}`,
           travelers: travelers.map(traveler => ({
             ...traveler,
