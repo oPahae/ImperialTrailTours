@@ -168,11 +168,11 @@ export default async function handler(req, res) {
 
         function getAllMonthsInYear(year) {
             const months = [];
-            for (let month = 0; month < 12; month++) {
-                const date = new Date(year, month, 1);
+            for (let m = 0; m < 12; m++) {
+                const monthStr = (m + 1).toString().padStart(2, '0'); // '01', '02', ...
                 months.push({
-                    month: date.toLocaleString('default', { month: 'short' }),
-                    yearMonth: date.toISOString().slice(0, 7) // Format 'YYYY-MM'
+                    month: new Date(year, m, 1).toLocaleString('en-US', { month: 'short' }), // Jan, Feb, ...
+                    yearMonth: `${year}-${monthStr}` // '2026-02'
                 });
             }
             return months;
@@ -194,17 +194,17 @@ export default async function handler(req, res) {
         const allMonths = getAllMonthsInYear(year);
         const bookingTrendsMap = {};
         bookingTrendsResult.forEach(row => {
-            bookingTrendsMap[row.yearMonth] = {
-                month: row.month,
-                count: row.count
-            };
+            bookingTrendsMap[row.yearMonth] = row.count;
         });
+
         const bookingTrendsLabels = [];
         const bookingTrends = [];
         allMonths.forEach(({ month, yearMonth }) => {
             bookingTrendsLabels.push(month);
-            bookingTrends.push(bookingTrendsMap[yearMonth]?.count || 0);
+            bookingTrends.push(bookingTrendsMap[yearMonth] || 0);
         });
+
+        console.log(bookingTrendsLabels, bookingTrends);
 
         // === CUSTOMER DEMOGRAPHICS (simulé à partir des voyageurs) ===
         const [demographicsResult] = await connection.query(
@@ -234,9 +234,52 @@ export default async function handler(req, res) {
         const otherCustomers = totalCustomers - directCustomers - socialCustomers - referralCustomers;
 
         // === SEASONAL TRENDS ===
-        const highSeasonBookings = Math.floor(totalBookings * 0.5);
-        const shoulderSeasonBookings = Math.floor(totalBookings * 0.3);
-        const lowSeasonBookings = totalBookings - highSeasonBookings - shoulderSeasonBookings;
+        const selectedYear = year || now.getFullYear();
+
+        // Haute saison : juin → août
+        const [highSeason] = await connection.query(
+            `SELECT COUNT(*) as count 
+            FROM Reservations 
+            WHERE status = 'approved' 
+            AND dateReserv BETWEEN ? AND ?`,
+            [`${selectedYear}-06-01`, `${selectedYear}-08-31`]
+        );
+        const highSeasonBookings = highSeason[0].count;
+
+        // Saison intermédiaire : avril → mai et septembre → octobre
+        const [shoulderSeason1] = await connection.query(
+            `SELECT COUNT(*) as count 
+            FROM Reservations 
+            WHERE status = 'approved' 
+            AND dateReserv BETWEEN ? AND ?`,
+            [`${selectedYear}-04-01`, `${selectedYear}-05-31`]
+        );
+        const [shoulderSeason2] = await connection.query(
+            `SELECT COUNT(*) as count 
+            FROM Reservations 
+            WHERE status = 'approved' 
+            AND dateReserv BETWEEN ? AND ?`,
+            [`${selectedYear}-09-01`, `${selectedYear}-10-31`]
+        );
+        const shoulderSeasonBookings = shoulderSeason1[0].count + shoulderSeason2[0].count;
+
+        // Basse saison : novembre → mars
+        const [lowSeason1] = await connection.query(
+            `SELECT COUNT(*) as count 
+            FROM Reservations 
+            WHERE status = 'approved' 
+            AND dateReserv BETWEEN ? AND ?`,
+            [`${selectedYear}-01-01`, `${selectedYear}-03-31`]
+        );
+        const [lowSeason2] = await connection.query(
+            `SELECT COUNT(*) as count 
+            FROM Reservations 
+            WHERE status = 'approved' 
+            AND dateReserv BETWEEN ? AND ?`,
+            [`${selectedYear}-11-01`, `${selectedYear}-12-31`]
+        );
+        console.log(`${selectedYear}-01-01`)
+        const lowSeasonBookings = lowSeason1[0].count + lowSeason2[0].count;
 
         connection.release();
 

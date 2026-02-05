@@ -505,8 +505,7 @@ export default function AdminStatsPage() {
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            </div><div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-xl font-bold text-gray-900">Seasonal Trends</h3>
                                     <div className="flex gap-2">
@@ -516,39 +515,30 @@ export default function AdminStatsPage() {
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {['High Season', 'Shoulder Season', 'Low Season'].map((season, index) => (
+                                    {[
+                                        { name: 'High Season', months: 'June-August', color: 'green', bookings: stats.highSeasonBookings, revenue: stats.highSeasonRevenue, Icon: TrendingUp },
+                                        { name: 'Shoulder Season', months: 'April-May, September-October', color: 'yellow', bookings: stats.shoulderSeasonBookings, revenue: stats.shoulderSeasonRevenue, Icon: Activity },
+                                        { name: 'Low Season', months: 'November-March', color: 'blue', bookings: stats.lowSeasonBookings, revenue: stats.lowSeasonRevenue, Icon: TrendingDown }
+                                    ].map((season, index) => (
                                         <div key={index} className="bg-white rounded-lg p-6 border border-gray-200">
                                             <div className="flex items-center justify-between mb-4">
-                                                <h4 className="font-semibold text-gray-900">{season}</h4>
-                                                <div className={`p-2 rounded-full ${index === 0 ? 'bg-green-100' : index === 1 ? 'bg-yellow-100' : 'bg-blue-100'}`}>
-                                                    {index === 0 ? (
-                                                        <TrendingUp className={`w-6 h-6 ${index === 0 ? 'text-green-600' : index === 1 ? 'text-yellow-600' : 'text-blue-600'}`} />
-                                                    ) : index === 1 ? (
-                                                        <Activity className={`w-6 h-6 ${index === 0 ? 'text-green-600' : index === 1 ? 'text-yellow-600' : 'text-blue-600'}`} />
-                                                    ) : (
-                                                        <TrendingDown className={`w-6 h-6 ${index === 0 ? 'text-green-600' : index === 1 ? 'text-yellow-600' : 'text-blue-600'}`} />
-                                                    )}
+                                                <h4 className="font-semibold text-gray-900">{season.name}</h4>
+                                                <div className={`p-2 rounded-full bg-${season.color}-100`}>
+                                                    <season.Icon className={`w-6 h-6 text-${season.color}-600`} />
                                                 </div>
                                             </div>
                                             <div className="mb-4">
                                                 <p className="text-sm text-gray-500 mb-1">Months:</p>
-                                                <p className="text-sm font-medium text-gray-900">
-                                                    {season === 'High Season' ? 'March-May, September-October' :
-                                                        season === 'Shoulder Season' ? 'June, November-February' : 'July-August'}
-                                                </p>
+                                                <p className="text-sm font-medium text-gray-900">{season.months}</p>
                                             </div>
                                             <div className="mb-4">
                                                 <p className="text-sm text-gray-500 mb-1">Bookings:</p>
-                                                <p className="text-lg font-bold text-gray-900">
-                                                    {season === 'High Season' ? stats.highSeasonBookings :
-                                                        season === 'Shoulder Season' ? stats.shoulderSeasonBookings : stats.lowSeasonBookings}
-                                                </p>
+                                                <p className="text-lg font-bold text-gray-900">{season.bookings}</p>
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-500 mb-1">Avg. Revenue:</p>
                                                 <p className="text-lg font-bold text-gray-900">
-                                                    ${season === 'High Season' ? stats.highSeasonRevenue.toLocaleString() :
-                                                        season === 'Shoulder Season' ? stats.shoulderSeasonRevenue.toLocaleString() : stats.lowSeasonRevenue.toLocaleString()}
+                                                    ${season.revenue.toLocaleString()}
                                                 </p>
                                             </div>
                                         </div>

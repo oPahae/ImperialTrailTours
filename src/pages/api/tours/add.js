@@ -27,15 +27,19 @@ export default async function handler(req, res) {
       availableDates,
     } = req.body;
 
+    if (!title || !description || !type || !days || !mainImage || !gallery || !places || !program || !highlights || !availableDates) {
+      res.status(400).json({ message: 'All fields must be filled' });
+    }
+
     const [tourResult] = await pool.query(
       'INSERT INTO Tours (titre, descr, codeUnique, njours, img, places, type) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [
         title,
         description,
         places.length > 1 ?
-          `TOUR${parseInt(Math.random(0,1)*100)}-${new Date(Date.now()).toLocaleDateString('FR-fr').replaceAll("/", "")}-${places[0].toUpperCase().slice(0, 3)}-${places[1].toUpperCase().slice(0, 3)}-${places[places.length-1].toUpperCase().slice(0, 3)}`
+          `TOUR${parseInt(Math.random(0, 1) * 100)}-${new Date(Date.now()).toLocaleDateString('FR-fr').replaceAll("/", "")}-${places[0].toUpperCase().slice(0, 3)}-${places[1].toUpperCase().slice(0, 3)}-${places[places.length - 1].toUpperCase().slice(0, 3)}`
           :
-          `TOUR${parseInt(Math.random(0,1)*100)}-${new Date(Date.now()).toLocaleDateString('FR-fr').replaceAll("/", "")}-${places[0].toUpperCase().slice(0, 3).slice(0, 3)}`,
+          `TOUR${parseInt(Math.random(0, 1) * 100)}-${new Date(Date.now()).toLocaleDateString('FR-fr').replaceAll("/", "")}-${places[0].toUpperCase().slice(0, 3).slice(0, 3)}`,
         days,
         mainImage ? Buffer.from(mainImage, 'base64') : null,
         places.join(','),

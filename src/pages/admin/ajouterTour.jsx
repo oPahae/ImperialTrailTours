@@ -4,6 +4,7 @@ import { types } from '@/utils/constants';
 import { verifyAuth } from "@/middlewares/adminAuth";
 
 const AddTourPage = () => {
+  const [error, setError] = useState("");
   const [tourData, setTourData] = useState({
     title: '',
     description: '',
@@ -266,7 +267,13 @@ const AddTourPage = () => {
         window.location.href = '/admin/tours';
       } else {
         const error = await response.json();
-        alert(`Error : ${error.message}`);
+        if (error.message !== 'All fields must be filled') alert(`Error : ${error.message}`);
+        else {
+          setError('All fields must be filled');
+          setTimeout(() => {
+            setError('');
+          }, 3000);
+        }
       }
     } catch (error) {
       console.error('Error :', error);
@@ -701,7 +708,13 @@ const AddTourPage = () => {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 pt-6">
+          {error &&
+            <div className='w-full flex justify-center items-center'>
+              <p className='text-red-600 font-bold'>{error}</p>
+            </div>
+          }
+
+          <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={handleSubmit}
               className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3"
