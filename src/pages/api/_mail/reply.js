@@ -11,11 +11,15 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
         const transporter = nodemailer.createTransport({
-            host: process.env.BREVO_SMTP,
+            host: process.env.OVH_SMTP,
             port: 587,
+            secure: false,
             auth: {
-                user: process.env.BREVO_USER,
-                pass: process.env.BREVO_API,
+                user: process.env.OVH_SMTP_USER,
+                pass: process.env.OVH_SMTP_PASS,
+            },
+            tls: {
+                rejectUnauthorized: false,
             },
         });
 
@@ -83,7 +87,7 @@ export default async function handler(req, res) {
             `;
 
             await transporter.sendMail({
-                from: process.env.BREVO_SENDER,
+                from: process.env.OVH_SENDER,
                 to: to,
                 subject: subject,
                 text: text,
