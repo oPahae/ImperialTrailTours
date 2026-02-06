@@ -36,6 +36,10 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: 'All fields must be filled' });
     }
 
+    if (places.length < 3) {
+      return res.status(400).json({ message: "At least 2 destinations, because tour's code is generated basing on destinations" });
+    }
+
     // For daily tours, validate dailyStartDate and dailyPrice
     if (daily && (!dailyStartDate || !dailyPrice)) {
       return res.status(400).json({ message: 'Daily tour requires start date and price' });
@@ -129,4 +133,5 @@ export default async function handler(req, res) {
     console.error('Erreur lors de l\'ajout du tour :', error);
     res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
+
 }
