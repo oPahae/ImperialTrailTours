@@ -16,8 +16,12 @@ CREATE TABLE Tours (
     codeUnique VARCHAR(50) UNIQUE NOT NULL,
     njours INT,
     img BLOB,
-    places VARCHAR(255), 
-    type VARCHAR(50)
+    places VARCHAR(255),
+    type VARCHAR(50),
+    daily BOOLEAN DEFAULT FALSE,
+    dateStart DATETIME DEFAULT NULL,
+    minSpots INT DEFAULT 0,
+    price INT DEFAULT NULL
 );
 
 CREATE TABLE ReviewsTour (
@@ -49,7 +53,7 @@ CREATE TABLE Jours (
 
 CREATE TABLE Dates (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    tourID INT NOT NULL,
+    tourID INT,
     dateDeb DATE NOT NULL,
     dateFin DATE NOT NULL,
     ndispo INT NOT NULL,
@@ -139,3 +143,18 @@ CREATE TABLE Percent (
 );
 
 INSERT INTO Percent (value) VALUES (20);
+
+
+
+----------------------
+
+
+
+ALTER TABLE Tours
+ADD COLUMN daily BOOLEAN DEFAULT FALSE,
+ADD COLUMN dateStart DATETIME DEFAULT NULL,
+ADD COLUMN minSpots INT DEFAULT 0,
+ADD COLUMN price INT DEFAULT NULL;
+
+ALTER TABLE Dates
+MODIFY COLUMN tourID INT NULL;
