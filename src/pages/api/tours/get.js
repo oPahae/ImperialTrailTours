@@ -22,7 +22,8 @@ export default async function handler(req, res) {
 
     const offset = (page - 1) * limit;
 
-    let baseQuery = `
+    // Query pour les tours non-daily
+    let nonDailyQuery = `
       SELECT
         t.id,
         t.titre AS title,
@@ -32,6 +33,9 @@ export default async function handler(req, res) {
         t.njours AS days,
         t.img AS image,
         t.places,
+        t.daily,
+        NULL AS dateStart,
+        NULL AS tourPrice,
         GROUP_CONCAT(DISTINCT h.titre SEPARATOR ', ') AS highlights,
         MIN(d.prix) AS price,
         MIN(d.dateDeb) AS date,
@@ -42,82 +46,152 @@ export default async function handler(req, res) {
       LEFT JOIN Dates d ON t.id = d.tourID
       LEFT JOIN ReviewsTour rt ON t.id = rt.tourID
       LEFT JOIN Highlights h ON t.id = h.tourID
-      WHERE 1=1
+      WHERE t.daily = FALSE
+    `;
+
+    // Query pour les tours daily
+    let dailyQuery = `
+      SELECT
+        t.id,
+        t.titre AS title,
+        t.descr AS description,
+        t.codeUnique AS code,
+        t.type,
+        t.njours AS days,
+        t.img AS image,
+        t.places,
+        t.daily,
+        t.dateStart,
+        t.price AS tourPrice,
+        GROUP_CONCAT(DISTINCT h.titre SEPARATOR ', ') AS highlights,
+        t.price AS price,
+        t.dateStart AS date,
+        NULL AS dateMax,
+        AVG(rt.netoiles) AS rating,
+        COUNT(rt.id) AS reviews
+      FROM Tours t
+      LEFT JOIN ReviewsTour rt ON t.id = rt.tourID
+      LEFT JOIN Highlights h ON t.id = h.tourID
+      WHERE t.daily = TRUE
     `;
 
     const params = [];
+    const dailyParams = [];
 
+    // Filtres pour les tours non-daily
     if (searchTerm) {
-      baseQuery += ` AND (t.titre LIKE ? OR t.places LIKE ?)`;
+      nonDailyQuery += ` AND (t.titre LIKE ? OR t.places LIKE ?)`;
       params.push(`%${searchTerm}%`, `%${searchTerm}%`);
     }
 
     if (type) {
-      baseQuery += ` AND t.type = ?`;
+      nonDailyQuery += ` AND t.type = ?`;
       params.push(type);
     }
 
     if (dateFrom) {
-      baseQuery += ` AND d.dateDeb >= ?`;
+      nonDailyQuery += ` AND d.dateDeb >= ?`;
       params.push(dateFrom);
     }
     if (dateTo) {
-      baseQuery += ` AND d.dateFin <= ?`;
+      nonDailyQuery += ` AND d.dateFin <= ?`;
       params.push(dateTo);
     }
 
-    baseQuery += ` AND t.njours BETWEEN ? AND ?`;
+    nonDailyQuery += ` AND t.njours BETWEEN ? AND ?`;
     params.push(parseInt(daysMin), parseInt(daysMax));
 
-    baseQuery += ` AND d.prix BETWEEN ? AND ?`;
+    nonDailyQuery += ` AND d.prix BETWEEN ? AND ?`;
     params.push(parseFloat(budgetMin), parseFloat(budgetMax));
 
-    baseQuery += ` GROUP BY t.id `;
+    nonDailyQuery += ` GROUP BY t.id `;
 
+    // Filtres pour les tours daily
+    if (searchTerm) {
+      dailyQuery += ` AND (t.titre LIKE ? OR t.places LIKE ?)`;
+      dailyParams.push(`%${searchTerm}%`, `%${searchTerm}%`);
+    }
+
+    if (type) {
+      dailyQuery += ` AND t.type = ?`;
+      dailyParams.push(type);
+    }
+
+    if (dateFrom) {
+      dailyQuery += ` AND t.dateStart >= ?`;
+      dailyParams.push(dateFrom);
+    }
+
+    dailyQuery += ` AND t.njours BETWEEN ? AND ?`;
+    dailyParams.push(parseInt(daysMin), parseInt(daysMax));
+
+    dailyQuery += ` AND t.price BETWEEN ? AND ?`;
+    dailyParams.push(parseFloat(budgetMin), parseFloat(budgetMax));
+
+    dailyQuery += ` GROUP BY t.id `;
+
+    // Combiner les deux queries avec UNION
+    let combinedQuery = `(${nonDailyQuery}) UNION ALL (${dailyQuery})`;
+    const combinedParams = [...params, ...dailyParams];
+
+    // Tri global
     switch (sortBy) {
       case 'price-asc':
-        baseQuery += ` ORDER BY price ASC`;
+        combinedQuery = `SELECT * FROM (${combinedQuery}) AS combined ORDER BY price ASC`;
         break;
       case 'price-desc':
-        baseQuery += ` ORDER BY price DESC`;
+        combinedQuery = `SELECT * FROM (${combinedQuery}) AS combined ORDER BY price DESC`;
         break;
       case 'days-asc':
-        baseQuery += ` ORDER BY days ASC`;
+        combinedQuery = `SELECT * FROM (${combinedQuery}) AS combined ORDER BY days ASC`;
         break;
       case 'days-desc':
-        baseQuery += ` ORDER BY days DESC`;
+        combinedQuery = `SELECT * FROM (${combinedQuery}) AS combined ORDER BY days DESC`;
         break;
       case 'rating':
-        baseQuery += ` ORDER BY rating DESC`;
+        combinedQuery = `SELECT * FROM (${combinedQuery}) AS combined ORDER BY rating DESC`;
         break;
       case 'date':
-        baseQuery += ` ORDER BY date ASC`;
+        combinedQuery = `SELECT * FROM (${combinedQuery}) AS combined ORDER BY date ASC`;
         break;
       default:
-        baseQuery += ` ORDER BY t.id DESC`;
+        combinedQuery = `SELECT * FROM (${combinedQuery}) AS combined ORDER BY id DESC`;
         break;
     }
 
-    baseQuery += ` LIMIT ? OFFSET ?`;
-    params.push(parseInt(limit), parseInt(offset));
+    combinedQuery += ` LIMIT ? OFFSET ?`;
+    combinedParams.push(parseInt(limit), parseInt(offset));
 
-    const [tours] = await pool.query(baseQuery, params);
+    const [tours] = await pool.query(combinedQuery, combinedParams);
 
-    const [total] = await pool.query(`
-      SELECT COUNT(*) AS total
-      FROM Tours t
-      LEFT JOIN Dates d ON t.id = d.tourID
-      WHERE 1=1
-      ${searchTerm ? 'AND (t.titre LIKE ? OR t.places LIKE ?)' : ''}
-      ${type ? 'AND t.type = ?' : ''}
-    `, searchTerm
-        ? type
-          ? [`%${searchTerm}%`, `%${searchTerm}%`, type]
-          : [`%${searchTerm}%`, `%${searchTerm}%`]
-        : type
-          ? [type]
-          : []
-    );
+    // Compter le total
+    let countQuery = `
+      SELECT COUNT(*) AS total FROM (
+        SELECT t.id FROM Tours t
+        LEFT JOIN Dates d ON t.id = d.tourID
+        WHERE t.daily = FALSE
+        ${searchTerm ? 'AND (t.titre LIKE ? OR t.places LIKE ?)' : ''}
+        ${type ? 'AND t.type = ?' : ''}
+        GROUP BY t.id
+        UNION ALL
+        SELECT t.id FROM Tours t
+        WHERE t.daily = TRUE
+        ${searchTerm ? 'AND (t.titre LIKE ? OR t.places LIKE ?)' : ''}
+        ${type ? 'AND t.type = ?' : ''}
+        GROUP BY t.id
+      ) AS total_tours
+    `;
+
+    let countParams = [];
+    if (searchTerm && type) {
+      countParams = [`%${searchTerm}%`, `%${searchTerm}%`, type, `%${searchTerm}%`, `%${searchTerm}%`, type];
+    } else if (searchTerm) {
+      countParams = [`%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`];
+    } else if (type) {
+      countParams = [type, type];
+    }
+
+    const [total] = await pool.query(countQuery, countParams);
 
     const formattedTours = tours.map(tour => ({
       id: tour.id,
@@ -126,8 +200,9 @@ export default async function handler(req, res) {
       type: tour.type,
       days: tour.days,
       price: tour.price || 0,
-      date: tour.date ? tour.date.toISOString().split('T')[0] : null,
-      dateMax: tour.dateMax ? tour.dateMax.toISOString().split('T')[0] : null,
+      daily: tour.daily,
+      date: tour.date ? (tour.date instanceof Date ? tour.date.toISOString().split('T')[0] : tour.date) : null,
+      dateMax: tour.dateMax ? (tour.dateMax instanceof Date ? tour.dateMax.toISOString().split('T')[0] : tour.dateMax) : null,
       image: tour.image
         ? `data:image/jpeg;base64,${tour.image.toString('base64')}`
         : 'https://via.placeholder.com/800x600?text=No+Image',
@@ -135,8 +210,6 @@ export default async function handler(req, res) {
       rating: tour.rating || 0,
       reviews: tour.reviews || 0,
     }));
-
-    formattedTours.map(f => console.log(f.title + " | " + f.dateMax + " | " + f.date))
 
     res.status(200).json({
       tours: formattedTours,

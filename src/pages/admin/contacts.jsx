@@ -18,6 +18,13 @@ export default function AdminContacts() {
         addToFaq: false
     });
 
+    const [showAddFaqModal, setShowAddFaqModal] = useState(false);
+    const [addFaqForm, setAddFaqForm] = useState({
+        nom: '',
+        question: '',
+        reponse: ''
+    });
+
     const [activeTab, setActiveTab] = useState('contacts');
 
     useEffect(() => {
@@ -121,9 +128,36 @@ export default function AdminContacts() {
             if (mailResponse.ok) {
                 setShowReplyModal(false);
                 fetchContacts();
+                fetchFaqs();
             }
         } catch (error) {
             console.error("Error sending reply:", error);
+        }
+    };
+
+    const handleAddFaqSubmit = async () => {
+        try {
+            const response = await fetch('/api/contacts/addFaq', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    nom: addFaqForm.nom || null,
+                    question: addFaqForm.question,
+                    reponse: addFaqForm.reponse
+                }),
+            });
+
+            if (response.ok) {
+                setShowAddFaqModal(false);
+                setAddFaqForm({ nom: '', question: '', reponse: '' });
+                fetchFaqs();
+            } else {
+                console.error("Error adding FAQ");
+            }
+        } catch (error) {
+            console.error("Error adding FAQ:", error);
         }
     };
 
@@ -336,17 +370,26 @@ export default function AdminContacts() {
                 </>
             ) : (
                 <>
-                    {/* Search Bar for FAQs */}
+                    {/* Search Bar and Add Button for FAQs */}
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                                type="text"
-                                placeholder="Search FAQs..."
-                                value={searchTermFaqs}
-                                onChange={(e) => setSearchTermFaqs(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                            />
+                        <div className="flex gap-3 flex-col sm:flex-row">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                <input
+                                    type="text"
+                                    placeholder="Search FAQs..."
+                                    value={searchTermFaqs}
+                                    onChange={(e) => setSearchTermFaqs(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                                />
+                            </div>
+                            <button
+                                onClick={() => setShowAddFaqModal(true)}
+                                className="px-4 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                            >
+                                <Plus className="w-5 h-5" />
+                                Add FAQ
+                            </button>
                         </div>
                     </div>
 
@@ -497,6 +540,78 @@ export default function AdminContacts() {
                                         className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         Send
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add FAQ Modal */}
+            {showAddFaqModal && (
+                <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-2xl font-bold text-gray-900">Add New FAQ</h2>
+                                <button
+                                    onClick={() => setShowAddFaqModal(false)}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <XCircle className="w-6 h-6" />
+                                </button>
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Name (optional)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={addFaqForm.nom}
+                                        onChange={(e) => setAddFaqForm({ ...addFaqForm, nom: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                                        placeholder="Enter name (optional)"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Question *
+                                    </label>
+                                    <textarea
+                                        value={addFaqForm.question}
+                                        onChange={(e) => setAddFaqForm({ ...addFaqForm, question: e.target.value })}
+                                        rows="3"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                                        placeholder="Enter the question..."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Answer *
+                                    </label>
+                                    <textarea
+                                        value={addFaqForm.reponse}
+                                        onChange={(e) => setAddFaqForm({ ...addFaqForm, reponse: e.target.value })}
+                                        rows="6"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                                        placeholder="Enter the answer..."
+                                    />
+                                </div>
+                                <div className="flex gap-3 justify-end pt-4">
+                                    <button
+                                        onClick={() => setShowAddFaqModal(false)}
+                                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleAddFaqSubmit}
+                                        disabled={!addFaqForm.question.trim() || !addFaqForm.reponse.trim()}
+                                        className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Add FAQ
                                     </button>
                                 </div>
                             </div>

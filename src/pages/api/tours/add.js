@@ -19,6 +19,10 @@ export default async function handler(req, res) {
       description,
       type,
       days,
+      minSpots,
+      daily,
+      dailyStartDate,
+      dailyPrice,
       mainImage,
       gallery,
       places,
@@ -27,28 +31,48 @@ export default async function handler(req, res) {
       availableDates,
     } = req.body;
 
-    if (!title || !description || !type || !days || !mainImage || !gallery || !places || !program || !highlights || !availableDates) {
-      res.status(400).json({ message: 'All fields must be filled' });
+    // Validation
+    if (!title || !description || !type || !days || !mainImage || !gallery || !places || !program || !highlights || !minSpots) {
+      return res.status(400).json({ message: 'All fields must be filled' });
     }
 
+    // For daily tours, validate dailyStartDate and dailyPrice
+    if (daily && (!dailyStartDate || !dailyPrice)) {
+      return res.status(400).json({ message: 'Daily tour requires start date and price' });
+    }
+
+    // For non-daily tours, validate availableDates
+    if (!daily && !availableDates) {
+      return res.status(400).json({ message: 'Non-daily tour requires available dates' });
+    }
+
+    // Generate unique code
+    const codeUnique = places.length > 1
+      ? `TOUR${parseInt(Math.random() * 100)}-${new Date(Date.now()).toLocaleDateString('FR-fr').replaceAll("/", "")}-${places[0].toUpperCase().slice(0, 3)}-${places[1].toUpperCase().slice(0, 3)}-${places[places.length - 1].toUpperCase().slice(0, 3)}`
+      : `TOUR${parseInt(Math.random() * 100)}-${new Date(Date.now()).toLocaleDateString('FR-fr').replaceAll("/", "")}-${places[0].toUpperCase().slice(0, 3)}`;
+
+    // Insert tour with daily and minSpots fields
     const [tourResult] = await pool.query(
-      'INSERT INTO Tours (titre, descr, codeUnique, njours, img, places, type) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      `INSERT INTO Tours (titre, descr, codeUnique, njours, img, places, type, daily, dateStart, minSpots, price) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title,
         description,
-        places.length > 1 ?
-          `TOUR${parseInt(Math.random(0, 1) * 100)}-${new Date(Date.now()).toLocaleDateString('FR-fr').replaceAll("/", "")}-${places[0].toUpperCase().slice(0, 3)}-${places[1].toUpperCase().slice(0, 3)}-${places[places.length - 1].toUpperCase().slice(0, 3)}`
-          :
-          `TOUR${parseInt(Math.random(0, 1) * 100)}-${new Date(Date.now()).toLocaleDateString('FR-fr').replaceAll("/", "")}-${places[0].toUpperCase().slice(0, 3).slice(0, 3)}`,
+        codeUnique,
         days,
         mainImage ? Buffer.from(mainImage, 'base64') : null,
         places.join(','),
         type,
+        daily ? 1 : 0,
+        daily ? dailyStartDate : null,
+        minSpots,
+        daily ? dailyPrice : null,
       ]
     );
 
     const tourId = tourResult.insertId;
 
+    // Insert gallery images
     if (gallery && gallery.length > 0) {
       for (const img of gallery) {
         await pool.query(
@@ -58,6 +82,7 @@ export default async function handler(req, res) {
       }
     }
 
+    // Insert program days
     for (const day of program) {
       await pool.query(
         'INSERT INTO Jours (tourID, titre, descr, inclus, places) VALUES (?, ?, ?, ?, ?)',
@@ -71,19 +96,23 @@ export default async function handler(req, res) {
       );
     }
 
-    for (const date of availableDates) {
-      await pool.query(
-        'INSERT INTO Dates (tourID, dateDeb, dateFin, ndispo, prix) VALUES (?, ?, ?, ?, ?)',
-        [
-          tourId,
-          date.startDate,
-          date.endDate,
-          date.spots,
-          date.price,
-        ]
-      );
+    // Insert available dates only if NOT a daily tour
+    if (!daily && availableDates && availableDates.length > 0) {
+      for (const date of availableDates) {
+        await pool.query(
+          'INSERT INTO Dates (tourID, dateDeb, dateFin, ndispo, prix) VALUES (?, ?, ?, ?, ?)',
+          [
+            tourId,
+            date.startDate,
+            date.endDate,
+            date.spots,
+            date.price,
+          ]
+        );
+      }
     }
 
+    // Insert highlights
     for (const highlight of highlights) {
       await pool.query(
         'INSERT INTO Highlights (tourID, titre, texte) VALUES (?, ?, ?)',

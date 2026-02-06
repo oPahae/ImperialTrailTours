@@ -14,11 +14,12 @@ export default async function handler(req, res) {
     }
 
     const tourData = req.body;
+    const conn = await pool.getConnection();
 
     try {
-        await pool.query('START TRANSACTION');
+        await conn.beginTransaction();
 
-        await pool.query(`
+        await conn.query(`
             UPDATE Tours SET
             titre = ?,
             descr = ?,
@@ -26,7 +27,10 @@ export default async function handler(req, res) {
             type = ?,
             njours = ?,
             img = ?,
-            places = ?
+            places = ?,
+            minSpots = ?,
+            dateStart = ?,
+            price = ?
             WHERE id = ?
         `, [
             tourData.title,
@@ -34,56 +38,70 @@ export default async function handler(req, res) {
             tourData.code,
             tourData.type,
             tourData.days,
-            tourData.image ? Buffer.from(tourData.image.split(',')[1], 'base64') : null,
+            tourData.image
+                ? Buffer.from(tourData.image.split(',')[1], 'base64')
+                : null,
             tourData.places.join(','),
+            tourData.minSpots,
+            tourData.daily ? tourData.dailyStartDate : null,
+            tourData.daily ? tourData.dailyPrice : null,
             tourData.id
-        ]
-        );
-        
-        // galerie
-        await pool.query('DELETE FROM Imgs WHERE tourID = ?', [tourData.id]);
+        ]);
+
+        // Gallery
+        await conn.query('DELETE FROM Imgs WHERE tourID = ?', [tourData.id]);
         for (const img of tourData.gallery || []) {
-            if (!img || typeof img !== 'string' || !img.startsWith('data:image')) continue;
-            await pool.query(
+            if (!img?.startsWith('data:image')) continue;
+            await conn.query(
                 'INSERT INTO Imgs (tourID, contenu) VALUES (?, ?)',
                 [tourData.id, Buffer.from(img.split(',')[1], 'base64')]
             );
         }
 
-        // programme
-        await pool.query('DELETE FROM Jours WHERE tourID = ?', [tourData.id]);
+        // Program
+        await conn.query('DELETE FROM Jours WHERE tourID = ?', [tourData.id]);
         for (const day of tourData.program) {
-            await pool.query(
+            await conn.query(
                 'INSERT INTO Jours (tourID, titre, descr, inclus, places) VALUES (?, ?, ?, ?, ?)',
                 [tourData.id, day.title, day.description, day.included.join(','), day.places.join(',')]
             );
         }
 
-        // highlights
-        await pool.query('DELETE FROM Highlights WHERE tourID = ?', [tourData.id]);
-        for (const highlight of tourData.highlights) {
-            await pool.query(
+        // Highlights
+        await conn.query('DELETE FROM Highlights WHERE tourID = ?', [tourData.id]);
+        for (const h of tourData.highlights) {
+            await conn.query(
                 'INSERT INTO Highlights (tourID, titre, texte) VALUES (?, ?, ?)',
-                [tourData.id, highlight.substring(0, 50), highlight]
+                [tourData.id, h.substring(0, 50), h]
             );
         }
 
-        // dates
-        await pool.query('DELETE FROM Dates WHERE tourID = ?', [tourData.id]);
-        for (const date of tourData.availableDates) {
-            await pool.query(
-                'INSERT INTO Dates (tourID, dateDeb, dateFin, prix, ndispo) VALUES (?, ?, ?, ?, ?)',
-                [tourData.id, date.startDate, date.endDate, date.price, date.spots]
-            );
+        // Dates (si pas daily)
+        if (!tourData.daily) {
+            await conn.query('DELETE FROM Dates WHERE tourID = ?', [tourData.id]);
+            for (const d of tourData.availableDates) {
+                await conn.query(
+                    'INSERT INTO Dates (tourID, dateDeb, dateFin, prix, ndispo) VALUES (?, ?, ?, ?, ?)',
+                    [tourData.id, d.startDate, d.endDate, d.price, d.spots]
+                );
+            }
         }
 
-        await pool.query('COMMIT');
-
-        res.status(200).json({ success: true, message: 'Tour mis à jour avec succès' });
+        await conn.commit();
+        res.status(200).json({ success: true });
 
     } catch (error) {
-        await pool.query('ROLLBACK');
-        console.error('Erreur lors de la mise à jour du tour :', error);
+        if (conn) {
+            try {
+                await conn.rollback();
+            } catch (_) {
+                console.error('Rollback impossible (connexion déjà fermée)');
+            }
+        }
+        console.error(error);
         res.status(500).json({ message: 'Erreur serveur', error: error.message });
+
+    } finally {
+        if (conn) conn.release();
     }
 }

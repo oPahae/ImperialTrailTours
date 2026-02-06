@@ -15,10 +15,49 @@ export default function AdminReservations() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [paymentPercent, setPaymentPercent] = useState(20);
+  const [updatingPercent, setUpdatingPercent] = useState(false);
 
   useEffect(() => {
     fetchReservations();
+    fetchPaymentPercent();
   }, []);
+
+  const fetchPaymentPercent = async () => {
+    try {
+      const response = await fetch('/api/payment/getPercent');
+      const data = await response.json();
+      if (data.value) {
+        setPaymentPercent(data.value);
+      }
+    } catch (error) {
+      console.error("Error fetching payment percent:", error);
+    }
+  };
+
+  const handleUpdatePercent = async () => {
+    try {
+      setUpdatingPercent(true);
+      const response = await fetch('/api/payment/updatePercent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ value: parseInt(paymentPercent) }),
+      });
+
+      if (response.ok) {
+        alert('Payment percentage updated successfully!');
+      } else {
+        alert('Failed to update payment percentage.');
+      }
+    } catch (error) {
+      console.error("Error updating payment percent:", error);
+      alert('Error updating payment percentage.');
+    } finally {
+      setUpdatingPercent(false);
+    }
+  };
 
   const fetchReservations = async () => {
     try {
@@ -174,6 +213,36 @@ export default function AdminReservations() {
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-amber-900 mb-4">Reservations Management</h1>
           <p className="text-lg text-gray-600">Review, approve, or reject booking requests</p>
+        </div>
+
+        {/* Payment Percentage Configuration */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-800 mb-1">Advance Payment Percentage</h3>
+              <p className="text-sm text-gray-600">Set the required upfront payment percentage for reservations</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={paymentPercent}
+                  onChange={(e) => setPaymentPercent(e.target.value)}
+                  className="w-24 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none text-center font-semibold text-lg"
+                />
+                <span className="text-2xl font-bold text-gray-700">%</span>
+              </div>
+              <button
+                onClick={handleUpdatePercent}
+                disabled={updatingPercent}
+                className="bg-amber-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-amber-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {updatingPercent ? 'Updating...' : 'Update'}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Tabs Navigation */}

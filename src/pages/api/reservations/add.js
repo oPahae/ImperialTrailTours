@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   const { tourId, dateId, travelers, userID } = req.body;
 
   if (!tourId || !dateId || !travelers || travelers.length === 0) {
-    return res.status(400).json({ message: 'Données manquantes' });
+    return res.status(400).json({ message: 'Missing Infos' });
   }
 
   try {
