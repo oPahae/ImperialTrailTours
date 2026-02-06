@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     }
 
     if (places.length < 3) {
-      return res.status(400).json({ message: "At least 2 destinations, because tour's code is generated basing on destinations" });
+      return res.status(400).json({ message: "At least 3 destinations, because tour's code is generated basing on destinations" });
     }
 
     // For daily tours, validate dailyStartDate and dailyPrice
@@ -135,3 +135,4 @@ export default async function handler(req, res) {
   }
 
 }
+
