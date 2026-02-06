@@ -27,14 +27,7 @@ const AddTourPage = () => {
       }
     ],
     highlights: [],
-    availableDates: [
-      {
-        startDate: '',
-        endDate: '',
-        price: 500,
-        spots: 1
-      }
-    ]
+    availableDates: []
   });
 
   const handleInputChange = (field, value) => {
@@ -304,7 +297,7 @@ const AddTourPage = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <div className="lg:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Tour Title</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Tour Title <span className='text-red-600 font-bold'>*</span></label>
                 <input
                   type="text"
                   value={tourData.title}
@@ -316,7 +309,7 @@ const AddTourPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Tour Type</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Tour Type <span className='text-red-600 font-bold'>*</span></label>
                 <select
                   value={tourData.type}
                   onChange={(e) => handleInputChange('type', e.target.value)}
@@ -340,7 +333,7 @@ const AddTourPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Number of Days</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Number of Days <span className='text-red-600 font-bold'>*</span></label>
                 <input
                   type="number"
                   min="1"
@@ -352,7 +345,7 @@ const AddTourPage = () => {
               </div>
 
               <div className="lg:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Description <span className='text-red-600 font-bold'>*</span></label>
                 <textarea
                   value={tourData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
@@ -375,7 +368,7 @@ const AddTourPage = () => {
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Main Image</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Main Image <span className='text-red-600 font-bold'>*</span></label>
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 sm:p-8 text-center hover:border-amber-500 transition-colors">
                   <input
                     type="file"
@@ -706,7 +699,7 @@ const AddTourPage = () => {
                 </h2>
 
                 <div className="space-y-4">
-                  {tourData.availableDates.map((date, idx) => (
+                  {tourData.availableDates.length > 0 && tourData.availableDates.map((date, idx) => (
                     <div key={idx} className="border border-gray-200 rounded-xl p-4 sm:p-6">
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="font-semibold text-gray-900">Date Option {idx + 1}</h3>
