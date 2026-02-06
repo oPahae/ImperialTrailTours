@@ -10,6 +10,10 @@ const AddTourPage = () => {
     description: '',
     type: types[0],
     days: 1,
+    minSpots: 2,
+    daily: false,
+    dailyStartDate: '',
+    dailyPrice: 0,
     mainImage: null,
     gallery: [],
     places: [],
@@ -319,8 +323,20 @@ const AddTourPage = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                   required
                 >
-                  {types.map(type => (<option value={type}>{type}</option>))}
+                  {types.map(type => (<option key={type} value={type}>{type}</option>))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Minimum Travelers</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={tourData.minSpots}
+                  onChange={(e) => handleInputChange('minSpots', parseInt(e.target.value))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                  required
+                />
               </div>
 
               <div>
@@ -628,84 +644,140 @@ const AddTourPage = () => {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                <Users className="text-amber-600" size={20} />
-              </div>
-              Available Dates
-            </h2>
+            <div className="mb-6">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={tourData.daily}
+                    onChange={(e) => handleInputChange('daily', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-14 h-8 bg-gray-300 rounded-full peer-checked:bg-amber-500 transition-colors"></div>
+                  <div className="absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform peer-checked:translate-x-6"></div>
+                </div>
+                <div>
+                  <span className="text-lg font-bold text-gray-900 block">Daily Tour</span>
+                  <span className="text-sm text-gray-600">This tour runs daily with fixed pricing</span>
+                </div>
+              </label>
+            </div>
 
-            <div className="space-y-4">
-              {tourData.availableDates.map((date, idx) => (
-                <div key={idx} className="border border-gray-200 rounded-xl p-4 sm:p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold text-gray-900">Date Option {idx + 1}</h3>
-                    <button
-                      type="button"
-                      onClick={() => removeAvailableDate(idx)}
-                      disabled={tourData.availableDates.length === 1}
-                      className="text-red-600 hover:text-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Trash2 size={20} />
-                    </button>
+            {tourData.daily ? (
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <Calendar className="text-amber-600" size={20} />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                      <input
-                        type="date"
-                        value={date.startDate}
-                        onChange={(e) => updateAvailableDate(idx, 'startDate', e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                      <input
-                        type="date"
-                        value={date.endDate}
-                        onChange={(e) => updateAvailableDate(idx, 'endDate', e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Price (USD)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={date.price}
-                        onChange={(e) => updateAvailableDate(idx, 'price', parseFloat(e.target.value))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-                        placeholder="1200"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Available Spots</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={date.spots}
-                        onChange={(e) => updateAvailableDate(idx, 'spots', parseInt(e.target.value))}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-                        placeholder="12"
-                        required
-                      />
-                    </div>
+                  Daily Tour Details
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date</label>
+                    <input
+                      type="date"
+                      value={tourData.dailyStartDate}
+                      onChange={(e) => handleInputChange('dailyStartDate', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Price (USD)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={tourData.dailyPrice}
+                      onChange={(e) => handleInputChange('dailyPrice', parseFloat(e.target.value))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                      placeholder="500"
+                      required
+                    />
                   </div>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={addAvailableDate}
-                className="w-full px-4 py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-amber-500 hover:text-amber-600 transition-colors flex items-center justify-center gap-2 font-medium"
-              >
-                <Plus size={20} />
-                Add Date Option
-              </button>
-            </div>
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <Users className="text-amber-600" size={20} />
+                  </div>
+                  Available Dates
+                </h2>
+
+                <div className="space-y-4">
+                  {tourData.availableDates.map((date, idx) => (
+                    <div key={idx} className="border border-gray-200 rounded-xl p-4 sm:p-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold text-gray-900">Date Option {idx + 1}</h3>
+                        <button
+                          type="button"
+                          onClick={() => removeAvailableDate(idx)}
+                          disabled={tourData.availableDates.length === 1}
+                          className="text-red-600 hover:text-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                          <input
+                            type="date"
+                            value={date.startDate}
+                            onChange={(e) => updateAvailableDate(idx, 'startDate', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                          <input
+                            type="date"
+                            value={date.endDate}
+                            onChange={(e) => updateAvailableDate(idx, 'endDate', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Price (USD)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={date.price}
+                            onChange={(e) => updateAvailableDate(idx, 'price', parseFloat(e.target.value))}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                            placeholder="1200"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Available Spots</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={date.spots}
+                            onChange={(e) => updateAvailableDate(idx, 'spots', parseInt(e.target.value))}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                            placeholder="12"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addAvailableDate}
+                    className="w-full px-4 py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-amber-500 hover:text-amber-600 transition-colors flex items-center justify-center gap-2 font-medium"
+                  >
+                    <Plus size={20} />
+                    Add Date Option
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {error &&
@@ -753,5 +825,4 @@ export async function getServerSideProps({ req, res }) {
   return {
     props: { session: { connected: true } },
   };
-
 }

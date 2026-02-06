@@ -22,6 +22,10 @@ export default async function handler(req, res) {
         t.njours AS days,
         t.img AS image,
         t.places,
+        t.daily,
+        t.dateStart,
+        t.minSpots,
+        t.price,
         AVG(r.netoiles) AS rating,
         COUNT(r.id) AS reviews
       FROM Tours t
@@ -39,12 +43,17 @@ export default async function handler(req, res) {
     const [program] = await pool.query('SELECT id, titre, descr, inclus, places FROM Jours WHERE tourID = ? ORDER BY id', [id]);
     const [highlights] = await pool.query('SELECT texte FROM Highlights WHERE tourID = ?', [id]);
     const [availableDates] = await pool.query('SELECT id, dateDeb AS startDate, dateFin AS endDate, prix AS price, ndispo AS spots FROM Dates WHERE tourID = ?', [id]);
+    
     const formattedTour = {
       id: tour[0].id,
       code: tour[0].code,
       title: tour[0].title,
       type: tour[0].type,
       days: tour[0].days,
+      minSpots: tour[0].minSpots || 0,
+      daily: tour[0].daily ? true : false,
+      dailyStartDate: tour[0].dateStart ? new Date(tour[0].dateStart).toISOString().split('T')[0] : '',
+      dailyPrice: tour[0].price || 0,
       price: tour[0].price || 0,
       date: tour[0].date || '',
       image: tour[0].image ? `data:image/jpeg;base64,${tour[0].image.toString('base64')}` : '',

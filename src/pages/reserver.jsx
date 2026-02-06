@@ -64,9 +64,7 @@ export default function Reserver({ session }) {
           setSelectedDateDetails(dateData.date);
           setPercent(percentData.value);
           setTourDate(`${dateData.date.startDate} - ${dateData.date.endDate}`);
-          if (dateData.date.spots <= 0) {
-            setErrorZero(true);
-          }
+          if (dateData.date.spots <= 0) setErrorZero(true);
         } catch (error) {
           console.error("Erreur lors de la récupération des données :", error);
         }
@@ -75,8 +73,13 @@ export default function Reserver({ session }) {
     }
   }, [id, date]);
 
+  useEffect(() => {
+    if(tourData && selectedDateDetails && tourData.minSpots > 1) updateTravelerCount(tourData.minSpots);
+  }, [selectedDateDetails, tourData]);
+
   const updateTravelerCount = (count) => {
     const newCount = Math.max(1, Math.min(selectedDateDetails.spots, count));
+    if(newCount < tourData.minSpots) return;
     setNumTravelers(newCount);
     const newTravelers = [...travelers];
     if (newCount > travelers.length) {
@@ -763,7 +766,19 @@ export default function Reserver({ session }) {
               {/* Confirmation button */}
               <div className="px-8 pb-8">
                 <button
-                  onClick={() => { setShowPayement(true); handleFinalBooking(); }}
+                  onClick={() => {
+                    if(travelers.length < tourData.minSpots) {
+                      setMsg('2 TRAVELERS MINIMUM !');
+                      setTimeout(() => {
+                        setMsg('');
+                      }, 2000);
+                      return;
+                    }
+                    else {
+                      setShowPayement(true);
+                      handleFinalBooking();
+                    }
+                  }}
                   className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center text-lg"
                 >
                   <CheckCircle className="mr-2 w-6 h-6" />
@@ -802,12 +817,14 @@ export default function Reserver({ session }) {
 
             {/* Bank Info */}
             <div className="space-y-3">
-              <div className="flex justify-between text-gray-700">
-                <span className="font-semibold">RIB</span>
-                <span className="font-mono tracking-wide">
-                  {footerInfos.rib}
-                </span>
-              </div>
+              {footerInfos.bank.map((info, index) => (
+                <div key={index} className="flex justify-between text-gray-700">
+                  <span className="font-semibold">{info.title}</span>
+                  <span className="font-mono tracking-wide">
+                    {info.value}
+                  </span>
+                </div>
+              ))}
 
               <div className="flex justify-between text-gray-700">
                 <span className="font-semibold">Total amount</span>

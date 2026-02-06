@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, Eye, MapPin, Calendar, Banknote, Users, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Eye, MapPin, Calendar, Banknote, Users, Filter, X, ChevronLeft, ChevronRight, Repeat } from 'lucide-react';
 import Link from 'next/link';
 import Loading from '@/components/Loading';
 import { types } from '@/utils/constants';
@@ -138,7 +138,7 @@ const AdminToursPage = () => {
                   className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent appearance-none bg-white cursor-pointer"
                 >
                   <option value="all">All Types</option>
-                  {types.map(type => (<option value={type}>{type}</option>))}
+                  {types.map(type => (<option key={type} value={type}>{type}</option>))}
                 </select>
               </div>
               <div className="relative min-w-[200px]">
@@ -186,10 +186,16 @@ const AdminToursPage = () => {
                     <div key={tour.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
                       <div className="relative h-48">
                         <img src={tour.image} alt={tour.title} className="w-full h-full object-cover" />
-                        <div className="absolute top-3 left-3 flex gap-2">
+                        <div className="absolute top-3 left-3 flex flex-col gap-2">
                           <span className="bg-white text-gray-900 px-3 py-1 rounded-full text-xs font-semibold shadow-sm">
                             {tour.code}
                           </span>
+                          {(tour.daily === true || tour.daily === 1) && (
+                            <span className="bg-gradient-to-r w-fit from-green-500 to-emerald-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-sm flex items-center gap-1">
+                              <Repeat size={12} />
+                              Daily Tour
+                            </span>
+                          )}
                         </div>
                         <div className="absolute top-3 right-3">
                           <span className="bg-amber-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-sm">
@@ -215,7 +221,9 @@ const AdminToursPage = () => {
                         </div>
                         <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
                           <MapPin size={16} className="text-gray-400" />
-                          <span className="text-sm text-gray-600">Next: {tour.date || 'N/A'}</span>
+                          <span className="text-sm text-gray-600">
+                            {tour.daily ? 'Available Daily' : `Next: ${tour.date || 'N/A'}`}
+                          </span>
                         </div>
                         <div className="flex gap-2">
                           <Link

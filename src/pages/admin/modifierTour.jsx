@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Save, Plus, Trash2, X, Edit2, Image, Calendar, MapPin, Star, Clock, CheckCircle } from 'lucide-react';
+import { Save, Plus, Trash2, X, Edit2, Image, Calendar, MapPin, Star, Clock, CheckCircle, Users } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { types } from '@/utils/constants';
 import { verifyAuth } from "@/middlewares/adminAuth";
@@ -15,6 +15,10 @@ const TourAdminPanel = () => {
     title: '',
     type: 'Cultural',
     days: 1,
+    minSpots: 10,
+    daily: false,
+    dailyStartDate: '',
+    dailyPrice: 0,
     price: 0,
     date: '',
     image: '',
@@ -39,6 +43,7 @@ const TourAdminPanel = () => {
           const response = await fetch(`/api/tours/getOneAdmin?id=${id}`);
           const data = await response.json();
           setTourData(data.tour);
+          console.log(data)
         } catch (error) {
           console.error("Erreur lors de la récupération du tour :", error);
         } finally {
@@ -326,7 +331,7 @@ const TourAdminPanel = () => {
                   onChange={(e) => updateField('type', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                 >
-                  {types.map(type => (<option value={type}>{type}</option>))}
+                  {types.map(type => (<option key={type} value={type}>{type}</option>))}
                 </select>
               ) : (
                 <p className="text-gray-900">{tourData.type}</p>
@@ -346,6 +351,20 @@ const TourAdminPanel = () => {
               )}
             </div>
             <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Minimum Travelers</label>
+              {editMode ? (
+                <input
+                  type="number"
+                  min="1"
+                  value={tourData.minSpots}
+                  onChange={(e) => updateField('minSpots', parseInt(e.target.value))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                />
+              ) : (
+                <p className="text-gray-900">{tourData.minSpots} travelers</p>
+              )}
+            </div>
+            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Duration (Days)</label>
               {editMode ? (
                 <input
@@ -360,6 +379,13 @@ const TourAdminPanel = () => {
               )}
             </div>
             <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Tour Schedule Type</label>
+              <div className="flex items-center gap-3">
+                <span className={`px-4 py-2 rounded-lg text-sm font-semibold ${tourData.daily ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                  {tourData.daily ? 'Daily Tour' : 'Scheduled Dates'}
+                </span>
+                <span className="text-xs text-gray-500">(Cannot be changed)</span>
+              </div>
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-2">Main Image</label>
@@ -695,100 +721,138 @@ const TourAdminPanel = () => {
             ))}
           </div>
         </div>
-        {/* Available Dates */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Available Dates</h2>
-            {editMode && (
-              <button
-                onClick={addDate}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700 flex items-center gap-2"
-              >
-                <Plus size={16} />
-                Add Date
-              </button>
-            )}
+        {/* Pricing Section - Daily vs Scheduled */}
+        {tourData.daily ? (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+              <Calendar className="text-amber-600" size={24} />
+              Daily Tour Pricing
+            </h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date</label>
+                {editMode ? (
+                  <input
+                    type="date"
+                    value={tourData.dailyStartDate}
+                    onChange={(e) => updateField('dailyStartDate', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                  />
+                ) : (
+                  <p className="text-gray-900">{tourData.dailyStartDate}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Price (USD)</label>
+                {editMode ? (
+                  <input
+                    type="number"
+                    min="0"
+                    value={tourData.dailyPrice}
+                    onChange={(e) => updateField('dailyPrice', parseFloat(e.target.value))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                  />
+                ) : (
+                  <p className="text-gray-900">${tourData.dailyPrice}</p>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-200">Start Date</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-200">End Date</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-200">Price</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-200">Available Spots</th>
-                  {editMode && <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 border border-gray-200">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {tourData.availableDates.map((date, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 border border-gray-200">
-                      {editMode ? (
-                        <input
-                          type="date"
-                          value={date.startDate}
-                          onChange={(e) => updateDate(idx, 'startDate', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 text-sm"
-                        />
-                      ) : (
-                        <span className="text-gray-900">{date.startDate}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 border border-gray-200">
-                      {editMode ? (
-                        <input
-                          type="date"
-                          value={date.endDate}
-                          onChange={(e) => updateDate(idx, 'endDate', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 text-sm"
-                        />
-                      ) : (
-                        <span className="text-gray-900">{date.endDate}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 border border-gray-200">
-                      {editMode ? (
-                        <input
-                          type="number"
-                          value={date.price}
-                          onChange={(e) => updateDate(idx, 'price', parseFloat(e.target.value))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 text-sm"
-                          min="0"
-                        />
-                      ) : (
-                        <span className="text-gray-900">${date.price}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 border border-gray-200">
-                      {editMode ? (
-                        <input
-                          type="number"
-                          value={date.spots}
-                          onChange={(e) => updateDate(idx, 'spots', parseInt(e.target.value))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 text-sm"
-                          min="0"
-                        />
-                      ) : (
-                        <span className="text-gray-900">{date.spots} spots</span>
-                      )}
-                    </td>
-                    {editMode && (
-                      <td className="px-4 py-3 border border-gray-200 text-center">
-                        <button
-                          onClick={() => removeDate(idx)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg inline-flex items-center justify-center"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </td>
-                    )}
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Available Dates</h2>
+              {editMode && (
+                <button
+                  onClick={addDate}
+                  className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700 flex items-center gap-2"
+                >
+                  <Plus size={16} />
+                  Add Date
+                </button>
+              )}
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-200">Start Date</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-200">End Date</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-200">Price</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border border-gray-200">Available Spots</th>
+                    {editMode && <th className="px-4 py-3 text-center text-sm font-semibold text-gray-900 border border-gray-200">Actions</th>}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {tourData.availableDates.map((date, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 border border-gray-200">
+                        {editMode ? (
+                          <input
+                            type="date"
+                            value={date.startDate}
+                            onChange={(e) => updateDate(idx, 'startDate', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 text-sm"
+                          />
+                        ) : (
+                          <span className="text-gray-900">{date.startDate}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 border border-gray-200">
+                        {editMode ? (
+                          <input
+                            type="date"
+                            value={date.endDate}
+                            onChange={(e) => updateDate(idx, 'endDate', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 text-sm"
+                          />
+                        ) : (
+                          <span className="text-gray-900">{date.endDate}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 border border-gray-200">
+                        {editMode ? (
+                          <input
+                            type="number"
+                            value={date.price}
+                            onChange={(e) => updateDate(idx, 'price', parseFloat(e.target.value))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 text-sm"
+                            min="0"
+                          />
+                        ) : (
+                          <span className="text-gray-900">${date.price}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 border border-gray-200">
+                        {editMode ? (
+                          <input
+                            type="number"
+                            value={date.spots}
+                            onChange={(e) => updateDate(idx, 'spots', parseInt(e.target.value))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 text-sm"
+                            min="0"
+                          />
+                        ) : (
+                          <span className="text-gray-900">{date.spots} spots</span>
+                        )}
+                      </td>
+                      {editMode && (
+                        <td className="px-4 py-3 border border-gray-200 text-center">
+                          <button
+                            onClick={() => removeDate(idx)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg inline-flex items-center justify-center"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

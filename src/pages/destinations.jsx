@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, MapPin, Calendar, Clock, Users, Star, X, ImageIcon, Filter } from 'lucide-react';
+import { Search, MapPin, Calendar, Clock, Users, Star, X, ImageIcon, Filter, Repeat } from 'lucide-react';
 import { Range } from 'react-range';
 import { useRouter } from 'next/router';
 import { destination, types } from '@/utils/constants';
@@ -78,6 +78,12 @@ export default function DestinationPage() {
         let result = tours.filter(tour => {
             const matchesSearch = tour.places.some(p => p.toLowerCase().includes(searchTerm.toLowerCase())) ||
                 tour.title.toLowerCase().includes(searchTerm.toLowerCase());
+            
+            // Pour les tours daily, on vérifie si dateStart existe et est dans le futur
+            const isFutureDate = tour.daily 
+                ? (tour.date && new Date(tour.date) >= new Date())
+                : (tour.dateMax && new Date(tour.dateMax) >= new Date());
+            
             const matchesDate = (!filters.dateFrom || new Date(tour.date) >= new Date(filters.dateFrom)) &&
                 (!filters.dateTo || new Date(new Date(tour.date).setDate(new Date(tour.date).getDate() + tour.days)) <= new Date(filters.dateTo));
             const matchesDays =
@@ -85,7 +91,7 @@ export default function DestinationPage() {
             const matchesBudget =
                 tour.price >= filters.budgetRange[0] && tour.price <= filters.budgetRange[1];
             const matchesType = !filters.type || tour.type === filters.type;
-            return new Date(tour.dateMax) >= new Date() && matchesSearch && matchesDate && matchesDays && matchesBudget && matchesType;
+            return isFutureDate && matchesSearch && matchesDate && matchesDays && matchesBudget && matchesType;
         });
         result.sort((a, b) => {
             switch (sortBy) {
@@ -206,7 +212,7 @@ export default function DestinationPage() {
                                         className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-amber-500 focus:outline-none"
                                     >
                                         <option value="">All Types</option>
-                                        {types.map(type => (<option value={type}>{type}</option>))}
+                                        {types.map(type => (<option key={type} value={type}>{type}</option>))}
                                     </select>
                                 </div>
                                 {/* Number of Days */}
@@ -238,6 +244,7 @@ export default function DestinationPage() {
                                         renderThumb={({ props, index }) => (
                                             <div
                                                 {...props}
+                                                key={index}
                                                 className="w-4 h-4 bg-amber-600 rounded-full shadow cursor-pointer"
                                             />
                                         )}
@@ -327,8 +334,16 @@ export default function DestinationPage() {
                                                     <MapPin className="w-5 h-5 text-gray-700" />
                                                 )}
                                             </button>
-                                            <div className="absolute top-4 left-4 bg-amber-700 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                                {tour.type}
+                                            <div className="absolute top-4 left-4 flex gap-2">
+                                                <div className="bg-amber-700 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                                    {tour.type}
+                                                </div>
+                                                {(tour.daily === true || tour.daily === 1) && (
+                                                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1.5 shadow-md">
+                                                        <Repeat size={14} className="animate-pulse" />
+                                                        <span>Daily</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         {/* Content Section */}
@@ -347,7 +362,12 @@ export default function DestinationPage() {
                                                 </div>
                                                 <div className="flex items-center gap-2 text-gray-600">
                                                     <Calendar className="w-4 h-4" />
-                                                    <span className="text-sm">{new Date(tour.date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                                                    <span className="text-sm">
+                                                        {tour.daily 
+                                                            ? 'From ' + new Date(tour.date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+                                                            : new Date(tour.date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+                                                        }
+                                                    </span>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-gray-600">
                                                     <Users className="w-4 h-4" />
@@ -384,17 +404,19 @@ export default function DestinationPage() {
                             )}
                         </div>
                         {/* Pagination */}
-                        <div className="flex justify-center gap-2 mt-8">
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                <button
-                                    key={page}
-                                    onClick={() => goToPage(page)}
-                                    className={`px-4 py-2 rounded-lg ${currentPage === page ? 'bg-amber-600 text-white' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}`}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-                        </div>
+                        {totalPages > 1 && (
+                            <div className="flex justify-center gap-2 mt-8">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                    <button
+                                        key={page}
+                                        onClick={() => goToPage(page)}
+                                        className={`px-4 py-2 rounded-lg ${currentPage === page ? 'bg-amber-600 text-white' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}`}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </>
                 )}
             </div>

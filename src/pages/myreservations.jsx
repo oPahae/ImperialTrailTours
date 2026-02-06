@@ -280,10 +280,12 @@ export default function Me({ session }) {
                                 <p className="text-black font-bold">Advance payment : {' '}</p>
                                 <span>{reservation.prix * reservation.voyageurs.length * percent / 100} $</span>
                               </div>
-                              <div className="flex gap-2 items-center justify-start mb-2">
-                                <p className="text-black font-bold">RIB : {' '}</p>
-                                <span>{footerInfos.rib}</span>
-                              </div>
+                              {footerInfos.bank.map((info, index) => (
+                                <div key={index} className="flex gap-2 items-center justify-start mb-2">
+                                  <p className="text-black font-bold">{info.title} : {' '}</p>
+                                  <span>{info.value}</span>
+                                </div>
+                              ))}
                               <p>* The remaining amount should be paid in person when you come for the tour *</p>
                               <div className="mt-4 bg-gray-50 border border-dashed border-gray-300 rounded-xl p-4">
 

@@ -1,7 +1,7 @@
 import { Facebook, Instagram, Linkedin, Youtube } from 'lucide-react';
 
 export const NO_BANNER_ROUTES = [
-    "/tour", "/admin/tours", "/reserver", "/admin/ajouterTour", "/admin/modifierTour", "/admin/reservations",
+    "/tour", "/admin/tours", "/reserver", "/reserver-daily", "/admin/ajouterTour", "/admin/modifierTour", "/admin/reservations",
     "/admin/blog", "/admin/ajouterBlog", "/admin/modifierBlog", "/me", "/about", "/privacy", "/myreservations", "/profile"
 ];
 
@@ -204,7 +204,13 @@ export const footerInfos = {
     email: "contact@imperialtrailtours.com",
     location: "A123 Residence Soraya Bloc A Imm MHamid 9, Marrakech",
     domaine: "https://www.imperialtrailtours.com",
-    rib: '1234 5678 9012 3456 7890',
+    bank: [
+        { title: 'ribTitle', value: 'MR JAMAI YOUSSEF (Manager)' },
+        { title: 'rib', value: '145 450 2111194938690024 21' },
+        { title: 'iban', value: 'MA64 - 145450211119493869002421' },
+        { title: 'swift', value: 'BCPOMAMC' },
+        { title: 'bankPopular', value: 'Banque Populaire – INARA' },
+    ],
 }
 
 export const destination = {
