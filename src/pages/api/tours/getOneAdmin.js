@@ -43,7 +43,7 @@ export default async function handler(req, res) {
     const [program] = await pool.query('SELECT id, titre, descr, inclus, places FROM Jours WHERE tourID = ? ORDER BY id', [id]);
     const [highlights] = await pool.query('SELECT texte FROM Highlights WHERE tourID = ?', [id]);
     const [availableDates] = await pool.query('SELECT id, dateDeb AS startDate, dateFin AS endDate, prix AS price, ndispo AS spots FROM Dates WHERE tourID = ?', [id]);
-    
+    console.log(availableDates)
     const formattedTour = {
       id: tour[0].id,
       code: tour[0].code,
