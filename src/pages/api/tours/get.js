@@ -192,6 +192,7 @@ export default async function handler(req, res) {
     }
 
     const [total] = await pool.query(countQuery, countParams);
+    console.log(tours[0])
 
     const formattedTours = tours.map(tour => ({
       id: tour.id,
@@ -201,8 +202,8 @@ export default async function handler(req, res) {
       days: tour.days,
       price: tour.price || 0,
       daily: tour.daily,
-      date: tour.date ? (tour.date instanceof Date ? tour.date.toISOString().split('T')[0] : tour.date) : null,
-      dateMax: tour.dateMax ? (tour.dateMax instanceof Date ? tour.dateMax.toISOString().split('T')[0] : tour.dateMax) : null,
+      date: formatDate(tour.date),
+      dateMax: formatDate(tour.dateMax),
       image: tour.image
         ? `data:image/jpeg;base64,${tour.image.toString('base64')}`
         : 'https://via.placeholder.com/800x600?text=No+Image',
@@ -221,3 +222,12 @@ export default async function handler(req, res) {
     res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 }
+
+const formatDate = (value) => {
+  if (!value) return null;
+
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return null;
+
+  return d.toISOString().split('T')[0];
+};
