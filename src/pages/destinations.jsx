@@ -80,9 +80,10 @@ export default function DestinationPage() {
                 tour.title.toLowerCase().includes(searchTerm.toLowerCase());
             
             // Pour les tours daily, on vérifie si dateStart existe et est dans le futur
-            const isFutureDate = tour.daily 
-                ? (tour.date && new Date(tour.date) >= new Date())
-                : (tour.dateMax && new Date(tour.dateMax) >= new Date());
+            // const isFutureDate = tour.daily 
+            //    ? (tour.date && new Date(tour.date) >= new Date())
+            //    : (tour.dateMax && new Date(tour.dateMax) >= new Date());
+            const isFutureDate = true;
             
             const matchesDate = (!filters.dateFrom || new Date(tour.date) >= new Date(filters.dateFrom)) &&
                 (!filters.dateTo || new Date(new Date(tour.date).setDate(new Date(tour.date).getDate() + tour.days)) <= new Date(filters.dateTo));
@@ -434,5 +435,6 @@ export async function getServerSideProps({ req, res }) {
   else return {
     props: { session: null },
   };
+
 
 }
