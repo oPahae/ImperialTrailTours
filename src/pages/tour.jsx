@@ -538,10 +538,10 @@ const TourPage = ({ setShowNotification }) => {
                         <td className="px-6 py-4 border border-gray-200 text-center">
                           <button
                             onClick={() => {
-                              if (date.spots > 0 || new Date(date.startDate) <= new Date())
+                              if (date.spots > 0 && new Date(date.startDate) >= new Date())
                                 router.push(`reserver?id=${id}&date=${date.id}`)
                             }}
-                            className={`${(date.spots > 0 && new Date(date.startDate) <= new Date()) ? "bg-amber-600 hover:bg-amber-700" : "bg-gray-600 cursor-not-allowed"} text-white px-6 py-2 rounded-lg font-semibold transition-colors`}
+                            className={`${(date.spots > 0 && new Date(date.startDate) >= new Date()) ? "bg-amber-600 hover:bg-amber-700" : "bg-gray-600 cursor-not-allowed"} text-white px-6 py-2 rounded-lg font-semibold transition-colors`}
                           >
                             Book
                           </button>
@@ -615,4 +615,5 @@ export async function getServerSideProps({ req, res }) {
   };
 
 }
+
 
