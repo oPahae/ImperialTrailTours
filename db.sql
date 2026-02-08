@@ -21,6 +21,7 @@ CREATE TABLE Tours (
     daily BOOLEAN DEFAULT FALSE,
     dateStart DATETIME DEFAULT NULL,
     minSpots INT DEFAULT 0,
+    maxSpots INT DEFAULT NULL,
     price INT DEFAULT NULL
 );
 
@@ -158,3 +159,11 @@ ADD COLUMN price INT DEFAULT NULL;
 
 ALTER TABLE Dates
 MODIFY COLUMN tourID INT NULL;
+
+
+
+----------------------
+
+
+
+ALTER TABLE Tours ADD COLUMN maxSpots INT DEFAULT NULL;

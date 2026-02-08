@@ -97,7 +97,7 @@ export default function TravelPhilosophy() {
             <div className="relative overflow-hidden rounded-lg shadow-2xl">
               <div className="absolute inset-0 bg-gradient-to-t from-amber-900/20 to-transparent z-10"></div>
               <img
-                src="https://images.unsplash.com/photo-1539768942893-daf53e448371?w=800&h=1000&fit=crop"
+                src="/phylosophy.png"
                 alt="Moroccan landscape"
                 className="w-full h-[600px] object-cover transform group-hover:scale-105 transition-transform duration-700"
               />

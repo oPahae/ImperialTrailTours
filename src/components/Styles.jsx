@@ -61,7 +61,7 @@ export default function TravelSlider({ entreprise }) {
             {entreprise}
           </h1>
           <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-            Découvrez nos différents types de voyages
+            Disvover our different travel types
           </p>
         </div>
 
@@ -203,7 +203,7 @@ export default function TravelSlider({ entreprise }) {
         {/* Mobile Navigation Hint */}
         <div className="text-center mt-8 lg:hidden">
           <p className="text-sm text-gray-500">
-            Glissez pour naviguer entre les types de voyages
+            Slide to navigate
           </p>
         </div>
       </div>

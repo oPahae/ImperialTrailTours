@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import "@/styles/globals.css"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
@@ -6,9 +6,21 @@ import { footerInfos } from "@/utils/constants"
 import { useRouter } from 'next/router'
 import { verifyAuth } from "@/middlewares/auth"
 import Head from 'next/head'
+import { CalendarIcon, X } from 'lucide-react'
 
 export default function MyApp({ Component, pageProps }) {
-  const router = useRouter()
+  const router = useRouter();
+  const [showNotification, setShowNotification] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (showNotification) {
+      timer = setTimeout(() => {
+        setShowNotification(false);
+      }, 3000);
+    }
+    return () => clearTimeout(timer);
+  }, [showNotification]);
 
   return (
     <>
@@ -51,6 +63,36 @@ export default function MyApp({ Component, pageProps }) {
         <link rel="manifest" href="/manifest.json" />
       </Head>
 
+      {showNotification && (
+        <div className="fixed bottom-6 right-6 z-50 animate-slide-up">
+          <div className="bg-white border-2 border-amber-500 rounded-lg shadow-2xl p-4 min-w-[320px] max-w-md">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                <CalendarIcon className="text-amber-600" size={20} />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-gray-900 mb-1">Select a Date</h4>
+                <p className="text-sm text-gray-600">Please choose your preferred departure date to continue with booking.</p>
+              </div>
+              <button
+                onClick={() => setShowNotification(false)}
+                className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="mt-3 h-1 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-amber-600 animate-progress"
+                style={{
+                  animation: 'progress 3s linear'
+                }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full h-screen">
         {!router.pathname.includes('login') &&
           !router.pathname.includes('register') && (
@@ -60,7 +102,10 @@ export default function MyApp({ Component, pageProps }) {
             />
           )}
 
-        <Component {...pageProps} entreprise={footerInfos.entreprise} />
+        <Component {...pageProps}
+          entreprise={footerInfos.entreprise}
+          setShowNotification={setShowNotification}
+        />
 
         <Footer
           session={pageProps.session}

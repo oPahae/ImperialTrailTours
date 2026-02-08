@@ -20,6 +20,7 @@ export default async function handler(req, res) {
       type,
       days,
       minSpots,
+      maxSpots,
       daily,
       dailyStartDate,
       dailyPrice,
@@ -57,8 +58,8 @@ export default async function handler(req, res) {
 
     // Insert tour with daily and minSpots fields
     const [tourResult] = await pool.query(
-      `INSERT INTO Tours (titre, descr, codeUnique, njours, img, places, type, daily, dateStart, minSpots, price) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO Tours (titre, descr, codeUnique, njours, img, places, type, daily, dateStart, minSpots, maxSpots, price) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title,
         description,
@@ -70,6 +71,7 @@ export default async function handler(req, res) {
         daily ? 1 : 0,
         daily ? dailyStartDate : null,
         minSpots,
+        maxSpots || null,
         daily ? dailyPrice : null,
       ]
     );

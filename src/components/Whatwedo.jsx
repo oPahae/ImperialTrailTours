@@ -112,7 +112,7 @@ export default function WhatWeDo() {
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-600 to-amber-600 rounded-2xl transform -rotate-3 group-hover:-rotate-6 transition-transform duration-300"></div>
                 <div className="relative overflow-hidden rounded-2xl shadow-2xl transform rotate-2 group-hover:rotate-0 transition-transform duration-300">
                   <img
-                    src="https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=600&h=800&fit=crop"
+                    src="/whatwedo.png"
                     alt="Local Moroccan guide"
                     className="w-full h-80 object-cover group-hover:scale-110 transition-transform duration-500"
                   />

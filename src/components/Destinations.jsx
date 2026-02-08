@@ -115,10 +115,10 @@ const Destinations = () => {
             <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-red-600 to-transparent"></div>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Nos Destinations
+            Our Destinations
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Découvrez la beauté et la diversité du Maroc à travers nos destinations soigneusement sélectionnées
+            Discover the beauty and diversity of Morocco through our carefully selected destinations.
           </p>
         </div>
 
