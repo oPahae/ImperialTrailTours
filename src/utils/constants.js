@@ -73,29 +73,29 @@ export const travelTypes = [
     {
         id: 2,
         title: "Affinity Travels",
-        description: "Voyages thématiques conçus pour des groupes partageant les mêmes intérêts : culture, gastronomie, aventure ou bien-être. Une expérience sur mesure pour votre passion.",
-        image: "https://images.unsplash.com/photo-1548013146-72479768bada?w=800&q=80",
+        description: "Themed journeys designed for groups sharing the same interests: culture, gastronomy, adventure, or wellness. A tailor-made experience for your passion.",
+        image: "/travelType1.jpg",
         color: "#D4A574"
     },
     {
         id: 3,
         title: "MICE",
-        description: "Solutions professionnelles pour vos événements d'entreprise : conférences, incentives, séminaires et team building dans les lieux les plus prestigieux du Maroc.",
-        image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80",
+        description: "Professional solutions for your corporate events: conferences, incentives, seminars, and team-building experiences in the most prestigious locations in Morocco.",
+        image: "/travelType2.png",
         color: "#4A7C59"
     },
     {
         id: 4,
         title: "Weddings",
-        description: "Célébrez votre union dans la magie du Maroc. Organisation complète de mariages et lunes de miel inoubliables dans des cadres exceptionnels.",
-        image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
+        description: "Celebrate your union in the magic of Morocco. Full-service wedding planning and unforgettable honeymoons in exceptional settings.",
+        image: "/travelType3.jpg",
         color: "#8B6F47"
     },
     {
         id: 5,
         title: "Tailored Travel",
-        description: "Votre voyage, vos règles. Des itinéraires entièrement personnalisés selon vos envies, votre rythme et vos centres d'intérêt pour une expérience unique.",
-        image: "https://images.unsplash.com/photo-1516815231560-8f41ec531527?w=800&q=80",
+        description: "Your trip, your rules. Fully customized itineraries based on your desires, pace, and interests for a truly unique experience.",
+        image: "/travelType4.jpg",
         color: "#2C5F7C"
     }
 ];
@@ -156,38 +156,38 @@ export const destinations = [
     {
         id: 1,
         name: "Marrakech",
-        description: "La perle du Sud, avec ses souks animés, le jardin Majorelle et la place Jemaa el-Fna. Une ville où tradition et modernité se rencontrent.",
-        image: "https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=800&q=80"
+        description: "The Pearl of the South, with its lively souks, the Majorelle Garden, and Jemaa el-Fna Square. A city where tradition and modernity meet.",
+        image: "/marrakech.jpg"
     },
     {
         id: 2,
         name: "Chefchaouen",
-        description: "La ville bleue nichée dans les montagnes du Rif, offrant des ruelles pittoresques et une atmosphère paisible unique.",
-        image: "https://images.unsplash.com/photo-1585462612241-01a2f837d53d?w=800&q=80"
+        description: "The Blue City nestled in the Rif Mountains, offering picturesque alleyways and a uniquely peaceful atmosphere.",
+        image: "/chefchaouen.jpg"
     },
     {
         id: 3,
-        name: "Fès",
-        description: "Capitale spirituelle du Maroc, abritant la plus ancienne université du monde et une médina classée au patrimoine mondial.",
-        image: "https://images.unsplash.com/photo-1566465497207-e8e5c0c2c2b6?w=800&q=80"
+        name: "Fes",
+        description: "The spiritual capital of Morocco, home to the world’s oldest university and a medina listed as a UNESCO World Heritage site.",
+        image: "/fes.jpg"
     },
     {
         id: 4,
         name: "Essaouira",
-        description: "Ville côtière fortifiée, réputée pour ses plages venteuses, son port de pêche authentique et son festival de musique Gnaoua.",
-        image: "https://images.unsplash.com/photo-1608106250061-86f118de58c6?w=800&q=80"
+        description: "A fortified coastal city, known for its windy beaches, authentic fishing port, and the Gnaoua World Music Festival.",
+        image: "/essaouira.jpg"
     },
     {
         id: 5,
         name: "Merzouga",
-        description: "Porte du désert du Sahara, offrant des dunes dorées spectaculaires et des nuits étoilées inoubliables.",
-        image: "https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800&q=80"
+        description: "Gateway to the Sahara Desert, offering spectacular golden dunes and unforgettable starry nights.",
+        image: "/merzouga.jpg"
     },
     {
         id: 6,
         name: "Casablanca",
-        description: "Métropole moderne du Maroc, célèbre pour la Mosquée Hassan II et son mélange architectural art déco et mauresque.",
-        image: "https://images.unsplash.com/photo-1591439657848-9f4b9ce436b9?w=800&q=80"
+        description: "A modern Moroccan metropolis, famous for the Hassan II Mosque and its blend of Art Deco and Moorish architecture.",
+        image: "/casablanca.jpeg"
     }
 ];
 

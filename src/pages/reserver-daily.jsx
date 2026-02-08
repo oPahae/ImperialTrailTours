@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, Calendar, Users, CheckCircle, User, Globe, Mail, Phone, MapPin, CreditCard, X, Repeat } from 'lucide-react';
+import { ChevronRight, Calendar, Users, CheckCircle, User, Globe, Mail, Phone, MapPin, CreditCard, X, Repeat, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { footerInfos } from '@/utils/constants';
 import { verifyAuth } from "@/middlewares/auth";
@@ -66,12 +66,6 @@ export default function ReserverDaily({ session }) {
           setTourData(tourData.tour);
           setPercent(percentData.value);
           setSelectedDate(date);
-
-          // Initialiser le nombre minimum de voyageurs
-          if (tourData.tour.minSpots > 0) {
-            setNumTravelers(tourData.tour.minSpots);
-            updateTravelerCount(tourData.tour.minSpots);
-          }
         } catch (error) {
           console.error("Erreur lors de la récupération des données :", error);
         }
@@ -81,8 +75,6 @@ export default function ReserverDaily({ session }) {
   }, [id, date]);
 
   const updateTravelerCount = (count) => {
-    const minSpots = tourData?.minSpots || 1;
-    const newCount = Math.max(minSpots, count);
     setNumTravelers(newCount);
     const newTravelers = [...travelers];
     if (newCount > travelers.length) {
@@ -118,7 +110,7 @@ export default function ReserverDaily({ session }) {
 
   const validateStep1 = () => {
     const minSpots = tourData?.minSpots || 1;
-    return numTravelers >= minSpots;
+    return true; // 7yydna dak lplan dial khas ykon > minSpots
   };
 
   const validateStep2 = () => {
@@ -449,13 +441,15 @@ export default function ReserverDaily({ session }) {
                 </div>
               </div>
 
+              {tourData.minSpots > 1 && <div className='w-full flex gap-2 justify-center items-center text-black font-bold rounded-xl underline md:px-16 py-2 mb-4'>
+                <AlertCircle size={28} />
+                Please note that this tour will not start until it reaches at least {tourData.minSpots} participants.
+              </div>}
+
               <div className="flex justify-center items-center">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Number of Travelers
-                    {tourData.minSpots > 0 && (
-                      <span className="text-xs text-gray-500 ml-2">(Minimum: {tourData.minSpots})</span>
-                    )}
                   </label>
                   <div className="flex items-center space-x-4">
                     <button
@@ -473,11 +467,6 @@ export default function ReserverDaily({ session }) {
                       +
                     </button>
                   </div>
-                  {tourData.minSpots > 0 && numTravelers < tourData.minSpots && (
-                    <p className="text-red-600 text-sm mt-2">
-                      This tour requires a minimum of {tourData.minSpots} travelers
-                    </p>
-                  )}
                 </div>
               </div>
 
@@ -848,6 +837,11 @@ export default function ReserverDaily({ session }) {
                   </ul>
                 </div>
               </div>
+
+              {tourData.minSpots > 1 && <div className='w-full flex gap-2 justify-center items-center text-black font-bold rounded-xl underline md:px-16 py-2 mb-4'>
+                <AlertCircle size={28} />
+                Please note that this tour will not start until it reaches at least {tourData.minSpots} participants.
+              </div>}
 
               {/* Success msg */}
               {msg && (

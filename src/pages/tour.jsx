@@ -1,10 +1,10 @@
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
-import { MapPin, Users, Star, Clock, CheckCircle, X, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { MapPin, Users, Star, Clock, CheckCircle, X, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Repeat, AlertCircle, ChevronLeftSquare } from 'lucide-react';
 import Link from 'next/link';
 import { verifyAuth } from "@/middlewares/auth";
 
-const TourPage = () => {
+const TourPage = ({ setShowNotification }) => {
   const router = useRouter();
   const { id } = router.query;
   const [reviewForm, setReviewForm] = useState({
@@ -17,6 +17,7 @@ const TourPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const bookingSectionRef = useRef(null);
 
   useEffect(() => {
     if (id) {
@@ -79,6 +80,15 @@ const TourPage = () => {
     }
   };
 
+  const handleBookNowClick = () => {
+    if (bookingSectionRef.current) {
+      bookingSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => {
+        setShowNotification(true);
+      }, 800);
+    }
+  };
+
   const getGoogleMapsUrl = (places) => {
     if (!places || places.length === 0) return "";
 
@@ -96,7 +106,7 @@ const TourPage = () => {
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
-    
+
     return { daysInMonth, startingDayOfWeek };
   };
 
@@ -107,7 +117,7 @@ const TourPage = () => {
     today.setHours(0, 0, 0, 0);
     startDate.setHours(0, 0, 0, 0);
     date.setHours(0, 0, 0, 0);
-    
+
     return date >= startDate && date >= today;
   };
 
@@ -139,7 +149,7 @@ const TourPage = () => {
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
       const isSelectable = isDateSelectable(date);
-      const isSelected = selectedDate && 
+      const isSelected = selectedDate &&
         date.getDate() === selectedDate.getDate() &&
         date.getMonth() === selectedDate.getMonth() &&
         date.getFullYear() === selectedDate.getFullYear();
@@ -149,13 +159,12 @@ const TourPage = () => {
           key={day}
           onClick={() => handleDateSelect(date)}
           disabled={!isSelectable}
-          className={`h-12 rounded-lg font-medium transition-all ${
-            isSelected
+          className={`h-12 rounded-lg font-medium transition-all ${isSelected
               ? 'bg-amber-600 text-white shadow-md scale-105'
               : isSelectable
-              ? 'bg-white hover:bg-amber-50 hover:border-amber-300 border border-gray-200 text-gray-900'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-          }`}
+                ? 'bg-white hover:bg-amber-50 hover:border-amber-300 border border-gray-200 text-gray-900'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
         >
           {day}
         </button>
@@ -200,11 +209,11 @@ const TourPage = () => {
               <div>
                 <p className="text-sm text-amber-800 font-medium">Selected Date</p>
                 <p className="text-lg font-bold text-amber-900">
-                  {selectedDate.toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
+                  {selectedDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
                   })}
                 </p>
               </div>
@@ -221,7 +230,7 @@ const TourPage = () => {
         <div className="mt-4 flex items-start gap-2 text-sm text-gray-600">
           <CalendarIcon size={16} className="mt-0.5 flex-shrink-0" />
           <p>
-            Select your preferred departure date. 
+            Select your preferred departure date.
             {tourData?.dateStart && ` Available from ${new Date(tourData.dateStart).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.`}
           </p>
         </div>
@@ -281,9 +290,13 @@ const TourPage = () => {
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 py-9">
         <div className="grid lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-12">
+            {tourData.minSpots > 1 && <div className='w-full flex gap-2 justify-center items-center text-black font-bold rounded-xl underline md:px-16 py mb-4'>
+              <AlertCircle size={28} />
+              Please note that this tour will not start until it reaches at least {tourData.minSpots} participants.
+            </div>}
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-4">Overview</h2>
               <p className="text-gray-600 leading-relaxed text-lg">{tourData.description}</p>
@@ -291,10 +304,14 @@ const TourPage = () => {
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">Gallery</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {tourData.gallery.map((img, idx) => (
+                {tourData.gallery.slice(0, 4).map((img, idx) => (
                   <img key={idx} src={img} alt={`Gallery ${idx + 1}`} className="w-full h-48 object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer" />
                 ))}
               </div>
+              <Link href={`tourGallery?id=${id}`} className='flex gap-2 justify-center items-center text-amber-500 mt-4 hover:underline'>
+                See more
+                <ChevronRight />
+              </Link>
             </div>
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">Tour Map</h2>
@@ -324,7 +341,7 @@ const TourPage = () => {
                 {tourData.program.map((day, idx) => (
                   <div key={day.day} className="border border-gray-200 rounded-lg overflow-hidden">
                     <div className="bg-amber-600 text-white px-6 py-4">
-                      <h3 className="text-xl font-bold">Day {idx+1}: {day.title}</h3>
+                      <h3 className="text-xl font-bold">Day {idx + 1}: {day.title}</h3>
                     </div>
                     <div className="p-6 bg-white">
                       <div className="mb-4">
@@ -397,6 +414,12 @@ const TourPage = () => {
                     </div>
                   )}
                 </div>
+                <button
+                  onClick={handleBookNowClick}
+                  className="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-lg font-semibold transition-colors shadow-md hover:shadow-lg"
+                >
+                  Book Now
+                </button>
               </div>
               <div className="bg-amber-600 text-white rounded-lg p-6">
                 <h3 className="font-bold text-xl mb-2">Need Help?</h3>
@@ -471,7 +494,7 @@ const TourPage = () => {
         </div>
 
         {/* Booking Section - Different for Daily vs Non-Daily Tours */}
-        <div className="mt-16">
+        <div className="mt-16" ref={bookingSectionRef}>
           {tourData.daily ? (
             <div>
               <div className="flex items-center gap-3 mb-8">
@@ -515,7 +538,7 @@ const TourPage = () => {
                         <td className="px-6 py-4 border border-gray-200 text-center">
                           <button
                             onClick={() => {
-                              if(date.spots > 0)
+                              if (date.spots > 0)
                                 router.push(`reserver?id=${id}&date=${date.id}`)
                             }}
                             className={`${date.spots > 0 ? "bg-amber-600 hover:bg-amber-700" : "bg-gray-600 cursor-not-allowed"} text-white px-6 py-2 rounded-lg font-semibold transition-colors`}

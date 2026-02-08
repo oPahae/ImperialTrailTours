@@ -9,6 +9,17 @@ const TourAdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { id } = router.query;
+  
+  // Track which sections have been modified
+  const [modifiedSections, setModifiedSections] = useState({
+    infos: false,
+    images: false,
+    destinations: false,
+    highlights: false,
+    days: false,
+    dates: false
+  });
+
   const [tourData, setTourData] = useState({
     id: null,
     code: '',
@@ -54,6 +65,205 @@ const TourAdminPanel = () => {
     }
   }, [id]);
 
+  const markSectionModified = (section) => {
+    setModifiedSections(prev => ({ ...prev, [section]: true }));
+  };
+
+  const handleSave = async () => {
+    const savePromises = [];
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      // Save general infos
+      if (modifiedSections.infos) {
+        const infosPromise = fetch('/api/tours/updateInfos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: tourData.id,
+            code: tourData.code,
+            title: tourData.title,
+            type: tourData.type,
+            days: tourData.days,
+            minSpots: tourData.minSpots,
+            description: tourData.description,
+            daily: tourData.daily,
+            dailyStartDate: tourData.dailyStartDate,
+            dailyPrice: tourData.dailyPrice
+          })
+        }).then(res => {
+          if (res.ok) successCount++;
+          else errorCount++;
+          return res;
+        });
+        savePromises.push(infosPromise);
+      }
+
+      // Save images
+      if (modifiedSections.images) {
+        const imagesPromise = fetch('/api/tours/updateImages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: tourData.id,
+            image: tourData.image,
+            gallery: tourData.gallery
+          })
+        }).then(res => {
+          if (res.ok) successCount++;
+          else errorCount++;
+          return res;
+        });
+        savePromises.push(imagesPromise);
+      }
+
+      // Save destinations
+      if (modifiedSections.destinations) {
+        const destinationsPromise = fetch('/api/tours/updateDestinations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: tourData.id,
+            places: tourData.places
+          })
+        }).then(res => {
+          if (res.ok) successCount++;
+          else errorCount++;
+          return res;
+        });
+        savePromises.push(destinationsPromise);
+      }
+
+      // Save highlights
+      if (modifiedSections.highlights) {
+        const highlightsPromise = fetch('/api/tours/updateHighlights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: tourData.id,
+            highlights: tourData.highlights
+          })
+        }).then(res => {
+          if (res.ok) successCount++;
+          else errorCount++;
+          return res;
+        });
+        savePromises.push(highlightsPromise);
+      }
+
+      // Save days/program
+      if (modifiedSections.days) {
+        const daysPromise = fetch('/api/tours/updateDays', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: tourData.id,
+            program: tourData.program
+          })
+        }).then(res => {
+          if (res.ok) successCount++;
+          else errorCount++;
+          return res;
+        });
+        savePromises.push(daysPromise);
+      }
+
+      // Save dates (only for non-daily tours)
+      if (modifiedSections.dates && !tourData.daily) {
+        const datesPromise = fetch('/api/tours/updateDates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: tourData.id,
+            availableDates: tourData.availableDates
+          })
+        }).then(res => {
+          if (res.ok) successCount++;
+          else errorCount++;
+          return res;
+        });
+        savePromises.push(datesPromise);
+      }
+
+      // Wait for all saves to complete
+      await Promise.all(savePromises);
+
+      if (errorCount === 0) {
+        setEditMode(false);
+        setModifiedSections({
+          infos: false,
+          images: false,
+          destinations: false,
+          highlights: false,
+          days: false,
+          dates: false
+        });
+        alert('All changes saved successfully!');
+      } else {
+        alert(`${successCount} sections saved successfully, ${errorCount} failed.`);
+      }
+
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde :", error);
+      alert('An error occurred while saving changes.');
+    }
+  };
+
+  const updateField = (field, value, section = 'infos') => {
+    setTourData(prev => ({ ...prev, [field]: value }));
+    markSectionModified(section);
+  };
+
+  const handleImageChange = (e, isMainImage = true, index = null) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (isMainImage) {
+          updateField('image', event.target.result, 'images');
+        } else {
+          updateGalleryImage(index, event.target.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const addPlace = () => {
+    setTourData(prev => ({ ...prev, places: [...prev.places, ''] }));
+    markSectionModified('destinations');
+  };
+
+  const updatePlace = (index, value) => {
+    const newPlaces = [...tourData.places];
+    newPlaces[index] = value;
+    setTourData(prev => ({ ...prev, places: newPlaces }));
+    markSectionModified('destinations');
+  };
+
+  const removePlace = (index) => {
+    setTourData(prev => ({ ...prev, places: prev.places.filter((_, i) => i !== index) }));
+    markSectionModified('destinations');
+  };
+
+  const addGalleryImage = () => {
+    setTourData(prev => ({ ...prev, gallery: [...prev.gallery, ''] }));
+    markSectionModified('images');
+  };
+
+  const updateGalleryImage = (index, value) => {
+    const newGallery = [...tourData.gallery];
+    newGallery[index] = value;
+    setTourData(prev => ({ ...prev, gallery: newGallery }));
+    markSectionModified('images');
+  };
+
+  const removeGalleryImage = (index) => {
+    setTourData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== index) }));
+    markSectionModified('images');
+  };
+
   const addDay = () => {
     const newDayNumber = tourData.program.length + 1;
     setTourData(prev => ({
@@ -70,6 +280,8 @@ const TourAdminPanel = () => {
       ],
       days: newDayNumber
     }));
+    markSectionModified('days');
+    markSectionModified('infos'); // Because days count changed
   };
 
   const removeDay = (dayIndex) => {
@@ -84,6 +296,8 @@ const TourAdminPanel = () => {
       program: updatedProgram,
       days: updatedProgram.length
     }));
+    markSectionModified('days');
+    markSectionModified('infos'); // Because days count changed
   };
 
   const moveDay = (dayIndex, direction) => {
@@ -104,79 +318,14 @@ const TourAdminPanel = () => {
       ...prev,
       program: updatedProgram
     }));
-  };
-
-  const handleSave = async () => {
-    try {
-      const response = await fetch('/api/tours/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(tourData),
-      });
-      if (response.ok) {
-        setEditMode(false);
-        alert('Changes saved successfully!');
-      } else {
-        console.error("Erreur lors de la sauvegarde des modifications");
-      }
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde :", error);
-    }
-  };
-
-  const updateField = (field, value) => {
-    setTourData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleImageChange = (e, isMainImage = true, index = null) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (isMainImage) {
-          updateField('image', event.target.result);
-        } else {
-          updateGalleryImage(index, event.target.result);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const addPlace = () => {
-    setTourData(prev => ({ ...prev, places: [...prev.places, ''] }));
-  };
-
-  const updatePlace = (index, value) => {
-    const newPlaces = [...tourData.places];
-    newPlaces[index] = value;
-    setTourData(prev => ({ ...prev, places: newPlaces }));
-  };
-
-  const removePlace = (index) => {
-    setTourData(prev => ({ ...prev, places: prev.places.filter((_, i) => i !== index) }));
-  };
-
-  const addGalleryImage = () => {
-    setTourData(prev => ({ ...prev, gallery: [...prev.gallery, ''] }));
-  };
-
-  const updateGalleryImage = (index, value) => {
-    const newGallery = [...tourData.gallery];
-    newGallery[index] = value;
-    setTourData(prev => ({ ...prev, gallery: newGallery }));
-  };
-
-  const removeGalleryImage = (index) => {
-    setTourData(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== index) }));
+    markSectionModified('days');
   };
 
   const updateProgram = (dayIndex, field, value) => {
     const newProgram = [...tourData.program];
     newProgram[dayIndex] = { ...newProgram[dayIndex], [field]: value };
     setTourData(prev => ({ ...prev, program: newProgram }));
+    markSectionModified('days');
   };
 
   const updateProgramPlace = (dayIndex, placeIndex, value) => {
@@ -185,18 +334,21 @@ const TourAdminPanel = () => {
     newPlaces[placeIndex] = value;
     newProgram[dayIndex] = { ...newProgram[dayIndex], places: newPlaces };
     setTourData(prev => ({ ...prev, program: newProgram }));
+    markSectionModified('days');
   };
 
   const addProgramPlace = (dayIndex) => {
     const newProgram = [...tourData.program];
     newProgram[dayIndex].places.push('');
     setTourData(prev => ({ ...prev, program: newProgram }));
+    markSectionModified('days');
   };
 
   const removeProgramPlace = (dayIndex, placeIndex) => {
     const newProgram = [...tourData.program];
     newProgram[dayIndex].places = newProgram[dayIndex].places.filter((_, i) => i !== placeIndex);
     setTourData(prev => ({ ...prev, program: newProgram }));
+    markSectionModified('days');
   };
 
   const updateProgramIncluded = (dayIndex, includedIndex, value) => {
@@ -205,32 +357,38 @@ const TourAdminPanel = () => {
     newIncluded[includedIndex] = value;
     newProgram[dayIndex] = { ...newProgram[dayIndex], included: newIncluded };
     setTourData(prev => ({ ...prev, program: newProgram }));
+    markSectionModified('days');
   };
 
   const addProgramIncluded = (dayIndex) => {
     const newProgram = [...tourData.program];
     newProgram[dayIndex].included.push('');
     setTourData(prev => ({ ...prev, program: newProgram }));
+    markSectionModified('days');
   };
 
   const removeProgramIncluded = (dayIndex, includedIndex) => {
     const newProgram = [...tourData.program];
     newProgram[dayIndex].included = newProgram[dayIndex].included.filter((_, i) => i !== includedIndex);
     setTourData(prev => ({ ...prev, program: newProgram }));
+    markSectionModified('days');
   };
 
   const addHighlight = () => {
     setTourData(prev => ({ ...prev, highlights: [...prev.highlights, ''] }));
+    markSectionModified('highlights');
   };
 
   const updateHighlight = (index, value) => {
     const newHighlights = [...tourData.highlights];
     newHighlights[index] = value;
     setTourData(prev => ({ ...prev, highlights: newHighlights }));
+    markSectionModified('highlights');
   };
 
   const removeHighlight = (index) => {
     setTourData(prev => ({ ...prev, highlights: prev.highlights.filter((_, i) => i !== index) }));
+    markSectionModified('highlights');
   };
 
   const addDate = () => {
@@ -245,12 +403,14 @@ const TourAdminPanel = () => {
         spots: 10
       }]
     }));
+    markSectionModified('dates');
   };
 
   const updateDate = (index, field, value) => {
     const newDates = [...tourData.availableDates];
     newDates[index] = { ...newDates[index], [field]: value };
     setTourData(prev => ({ ...prev, availableDates: newDates }));
+    markSectionModified('dates');
   };
 
   const removeDate = (index) => {
@@ -258,6 +418,7 @@ const TourAdminPanel = () => {
       ...prev,
       availableDates: prev.availableDates.filter((_, i) => i !== index)
     }));
+    markSectionModified('dates');
   };
 
   if (loading) {
@@ -267,6 +428,8 @@ const TourAdminPanel = () => {
       </div>
     );
   }
+
+  const hasModifications = Object.values(modifiedSections).some(val => val);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -279,17 +442,32 @@ const TourAdminPanel = () => {
               {editMode ? (
                 <>
                   <button
-                    onClick={() => setEditMode(false)}
+                    onClick={() => {
+                      setEditMode(false);
+                      setModifiedSections({
+                        infos: false,
+                        images: false,
+                        destinations: false,
+                        highlights: false,
+                        days: false,
+                        dates: false
+                      });
+                    }}
                     className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSave}
-                    className="px-6 py-2 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition-colors flex items-center gap-2"
+                    disabled={!hasModifications}
+                    className={`px-6 py-2 rounded-lg font-semibold transition-colors flex items-center gap-2 ${
+                      hasModifications 
+                        ? 'bg-amber-600 text-white hover:bg-amber-700' 
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
                   >
                     <Save size={20} />
-                    Save Changes
+                    Save Changes {hasModifications && `(${Object.values(modifiedSections).filter(Boolean).length})`}
                   </button>
                 </>
               ) : (
@@ -316,7 +494,7 @@ const TourAdminPanel = () => {
                 <input
                   type="text"
                   value={tourData.code}
-                  onChange={(e) => updateField('code', e.target.value)}
+                  onChange={(e) => updateField('code', e.target.value, 'infos')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                 />
               ) : (
@@ -328,7 +506,7 @@ const TourAdminPanel = () => {
               {editMode ? (
                 <select
                   value={tourData.type}
-                  onChange={(e) => updateField('type', e.target.value)}
+                  onChange={(e) => updateField('type', e.target.value, 'infos')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                 >
                   {types.map(type => (<option key={type} value={type}>{type}</option>))}
@@ -343,7 +521,7 @@ const TourAdminPanel = () => {
                 <input
                   type="text"
                   value={tourData.title}
-                  onChange={(e) => updateField('title', e.target.value)}
+                  onChange={(e) => updateField('title', e.target.value, 'infos')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                 />
               ) : (
@@ -357,7 +535,7 @@ const TourAdminPanel = () => {
                   type="number"
                   min="1"
                   value={tourData.minSpots}
-                  onChange={(e) => updateField('minSpots', parseInt(e.target.value))}
+                  onChange={(e) => updateField('minSpots', parseInt(e.target.value), 'infos')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                 />
               ) : (
@@ -370,7 +548,7 @@ const TourAdminPanel = () => {
                 <input
                   type="number"
                   value={tourData.days}
-                  onChange={(e) => updateField('days', parseInt(e.target.value))}
+                  onChange={(e) => updateField('days', parseInt(e.target.value), 'infos')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                   min="1"
                 />
@@ -413,7 +591,7 @@ const TourAdminPanel = () => {
               {editMode ? (
                 <textarea
                   value={tourData.description}
-                  onChange={(e) => updateField('description', e.target.value)}
+                  onChange={(e) => updateField('description', e.target.value, 'infos')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                   rows="4"
                 />
@@ -735,7 +913,7 @@ const TourAdminPanel = () => {
                   <input
                     type="date"
                     value={tourData.dailyStartDate}
-                    onChange={(e) => updateField('dailyStartDate', e.target.value)}
+                    onChange={(e) => updateField('dailyStartDate', e.target.value, 'infos')}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                   />
                 ) : (
@@ -749,7 +927,7 @@ const TourAdminPanel = () => {
                     type="number"
                     min="0"
                     value={tourData.dailyPrice}
-                    onChange={(e) => updateField('dailyPrice', parseFloat(e.target.value))}
+                    onChange={(e) => updateField('dailyPrice', parseFloat(e.target.value), 'infos')}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
                   />
                 ) : (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronRight, Calendar, Users, CheckCircle, User, Globe, Mail, Phone, MapPin, CreditCard, X } from 'lucide-react';
+import { ChevronRight, Calendar, Users, CheckCircle, User, Globe, Mail, Phone, MapPin, CreditCard, X, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { footerInfos } from '@/utils/constants';
 import { verifyAuth } from "@/middlewares/auth";
@@ -73,13 +73,8 @@ export default function Reserver({ session }) {
     }
   }, [id, date]);
 
-  useEffect(() => {
-    if(tourData && selectedDateDetails && tourData.minSpots > 1) updateTravelerCount(tourData.minSpots);
-  }, [selectedDateDetails, tourData]);
-
   const updateTravelerCount = (count) => {
     const newCount = Math.max(1, Math.min(selectedDateDetails.spots, count));
-    if(newCount < tourData.minSpots) return;
     setNumTravelers(newCount);
     const newTravelers = [...travelers];
     if (newCount > travelers.length) {
@@ -399,6 +394,12 @@ export default function Reserver({ session }) {
                   <p className="text-lg font-bold text-amber-700 mt-2">${selectedDateDetails.price} per person</p>
                 </div>
               </div>
+
+              {tourData.minSpots > 1 && <div className='w-full flex gap-2 justify-center items-center text-black font-bold rounded-xl underline md:px-16 py-2 mb-4'>
+                <AlertCircle size={28} />
+                Please note that this tour will not start until it reaches at least {tourData.minSpots} participants.
+              </div>}
+
               <div className="flex justify-center items-center">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Number of Travelers</label>
@@ -757,6 +758,12 @@ export default function Reserver({ session }) {
                   </ul>
                 </div>
               </div>
+
+              {tourData.minSpots > 1 && <div className='w-full flex gap-2 justify-center items-center text-black font-bold rounded-xl underline md:px-16 py-2 mb-4'>
+                <AlertCircle size={28} />
+                Please note that this tour will not start until it reaches at least {tourData.minSpots} participants.
+              </div>}
+
               {/* Success msg */}
               {msg &&
                 <div className='w-full flex justify-center items-center mb-5'>
@@ -766,19 +773,7 @@ export default function Reserver({ session }) {
               {/* Confirmation button */}
               <div className="px-8 pb-8">
                 <button
-                  onClick={() => {
-                    if(travelers.length < tourData.minSpots) {
-                      setMsg('2 TRAVELERS MINIMUM !');
-                      setTimeout(() => {
-                        setMsg('');
-                      }, 2000);
-                      return;
-                    }
-                    else {
-                      setShowPayement(true);
-                      handleFinalBooking();
-                    }
-                  }}
+                  onClick={() => { setShowPayement(true); handleFinalBooking(); }}
                   className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center text-lg"
                 >
                   <CheckCircle className="mr-2 w-6 h-6" />

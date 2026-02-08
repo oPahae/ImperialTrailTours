@@ -11,6 +11,7 @@ const AddTourPage = () => {
     type: types[0],
     days: 1,
     minSpots: 2,
+    maxSpots: null,
     daily: false,
     dailyStartDate: '',
     dailyPrice: 0,
@@ -684,6 +685,17 @@ const AddTourPage = () => {
                       onChange={(e) => handleInputChange('dailyPrice', parseFloat(e.target.value))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                       placeholder="500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Maximum Travelers (Optional)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={tourData.maxSpots}
+                      onChange={(e) => handleInputChange('maxSpots', parseInt(e.target.value))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
                       required
                     />
                   </div>
