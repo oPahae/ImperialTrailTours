@@ -26,6 +26,7 @@ export default async function handler(req, res) {
         t.dateStart,
         t.price AS tourPrice,
         t.minSpots,
+        t.maxSpots,
         MIN(d.prix) AS price,
         AVG(r.netoiles) AS rating,
         COUNT(r.id) AS reviews
@@ -65,6 +66,7 @@ export default async function handler(req, res) {
       price: tour[0].daily ? tour[0].tourPrice : (tour[0].price || 0),
       dateStart: tour[0].dateStart ? tour[0].dateStart.toISOString().split('T')[0] : null,
       minSpots: tour[0].minSpots || 0,
+      maxSpots: tour[0].maxSpots || 0,
       image: tour[0].image ? `data:image/jpeg;base64,${tour[0].image.toString('base64')}` : '',
       places: tour[0].places ? tour[0].places.split(',') : [],
       rating: tour[0].rating || 0,
