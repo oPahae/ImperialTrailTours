@@ -521,7 +521,7 @@ const TourPage = ({ setShowNotification }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {tourData.availableDates.filter(d => new Date(d.startDate) > new Date()).map((date, idx) => (
+                    {tourData.availableDates.map((date, idx) => (
                       <tr key={idx} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 border border-gray-200 text-gray-700">{date.startDate}</td>
                         <td className="px-6 py-4 border border-gray-200 text-gray-700">{date.endDate}</td>
@@ -538,10 +538,10 @@ const TourPage = ({ setShowNotification }) => {
                         <td className="px-6 py-4 border border-gray-200 text-center">
                           <button
                             onClick={() => {
-                              if (date.spots > 0)
+                              if (date.spots > 0 || new Date(d.startDate) <= new Date())
                                 router.push(`reserver?id=${id}&date=${date.id}`)
                             }}
-                            className={`${date.spots > 0 ? "bg-amber-600 hover:bg-amber-700" : "bg-gray-600 cursor-not-allowed"} text-white px-6 py-2 rounded-lg font-semibold transition-colors`}
+                            className={`${(date.spots > 0 && new Date(d.startDate) <= new Date()) ? "bg-amber-600 hover:bg-amber-700" : "bg-gray-600 cursor-not-allowed"} text-white px-6 py-2 rounded-lg font-semibold transition-colors`}
                           >
                             Book
                           </button>
@@ -613,4 +613,5 @@ export async function getServerSideProps({ req, res }) {
   else return {
     props: { session: null },
   };
+
 }
