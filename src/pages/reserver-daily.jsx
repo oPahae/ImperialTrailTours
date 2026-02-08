@@ -75,10 +75,11 @@ export default function ReserverDaily({ session }) {
   }, [id, date]);
 
   const updateTravelerCount = (count) => {
-    setNumTravelers(newCount);
+    if(tourData.maxSpots && count >= tourData.maxSpots) count = tourData.maxSpots;
+    setNumTravelers(count);
     const newTravelers = [...travelers];
-    if (newCount > travelers.length) {
-      for (let i = travelers.length; i < newCount; i++) {
+    if (count > travelers.length) {
+      for (let i = travelers.length; i < count; i++) {
         newTravelers.push({
           prefix: '',
           firstName: '',
@@ -97,7 +98,7 @@ export default function ReserverDaily({ session }) {
         });
       }
     } else {
-      newTravelers.splice(newCount);
+      newTravelers.splice(count);
     }
     setTravelers(newTravelers);
   };
@@ -406,7 +407,7 @@ export default function ReserverDaily({ session }) {
         {step === 1 && (
           <div className="max-w-2xl mx-auto">
             <div className="bg-white rounded-2xl shadow-lg p-8 border-t-4 border-amber-600">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">Select Number of Travelers</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">Select Number of Travelers {tourData.maxSpots && `(Max: ${tourData.maxSpots})`}</h2>
 
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">Tour Information</h3>
@@ -454,7 +455,7 @@ export default function ReserverDaily({ session }) {
                   <div className="flex items-center space-x-4">
                     <button
                       onClick={() => updateTravelerCount(numTravelers - 1)}
-                      disabled={numTravelers <= (tourData.minSpots || 1)}
+                      disabled={numTravelers <= 1}
                       className="w-12 h-12 bg-amber-100 text-amber-700 rounded-lg font-bold hover:bg-amber-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       -
@@ -462,7 +463,8 @@ export default function ReserverDaily({ session }) {
                     <span className="text-2xl font-bold text-gray-800 w-12 text-center">{numTravelers}</span>
                     <button
                       onClick={() => updateTravelerCount(numTravelers + 1)}
-                      className="w-12 h-12 bg-amber-100 text-amber-700 rounded-lg font-bold hover:bg-amber-200 transition-colors"
+                      disabled={tourData.maxSpots && numTravelers >= tourData.maxSpots}
+                      className="w-12 h-12 bg-amber-100 text-amber-700 rounded-lg font-bold hover:bg-amber-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       +
                     </button>
@@ -853,7 +855,16 @@ export default function ReserverDaily({ session }) {
               {/* Confirmation button */}
               <div className="px-8 pb-8">
                 <button
-                  onClick={() => { setShowPayement(true); handleFinalBooking(); }}
+                  onClick={() => {
+                    if(tourData.maxSpots && numTravelers > tourData.maxSpots) {
+                      setMsg('Traveler > Max Spots :/');
+                      return;
+                    }
+                    else {
+                      setShowPayement(true);
+                      handleFinalBooking();
+                    }
+                  }}
                   disabled={reservationId !== null}
                   className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
